@@ -231,7 +231,7 @@ th{background:#f2f4f6}
 </header>
 
 <nav class="nav">
-<a onclick="setCategory('Clothes')">Clothes</a>
+<a onclick="setCategory('all')">All</a>
 <a onclick="openAuth()">Sign in</a>
 <a onclick="openOrders()">Your Orders</a>
 <a onclick="openCart()">Cart</a>
@@ -239,16 +239,16 @@ th{background:#f2f4f6}
 </nav>
 
 <section class="hero">
-<h1>Welcome to SUPER MART Clothing</h1>
-<p>Discover everyday fashion and clothing.</p>
+<h1>Welcome to SUPER MART</h1>
+<p>Shop your everyday essentials at great prices.</p>
 <button onclick="document.getElementById('productsSection').scrollIntoView({behavior:'smooth'})">Shop Now</button>
 </section>
 
 <main class="wrap">
 <div class="section-head" id="productsSection">
-<h2>Clothes Collection</h2>
+<h2>Our Products</h2>
 <div class="filters">
-<select id="categoryFilter" onchange="renderProducts()"><option value="Clothes">Clothes</option></select>
+<select id="categoryFilter" onchange="renderProducts()"><option value="all">All categories</option></select>
 <select id="sortFilter" onchange="renderProducts()">
 <option value="default">Sort: Featured</option>
 <option value="low">Price: Low to High</option>
@@ -445,7 +445,7 @@ Aap apna sawal yahan pooch sakte hain.</div></div>
 <button class="active" onclick="showAdminTab('adminOverview',this)">▦ Overview</button>
 <button onclick="showAdminTab('adminOrders',this)">▤ Orders</button>
 <button onclick="showAdminTab('adminProducts',this)">▣ Products</button>
-
+<button onclick="showAdminTab('adminCategories',this)">▧ Categories</button>
 <button onclick="showAdminTab('adminCustomers',this)">♙ Customers</button>
 <button onclick="showAdminTab('adminCoupons',this)">％ Coupons</button>
 <button onclick="showAdminTab('adminReports',this)">▥ Reports</button>
@@ -472,7 +472,7 @@ Aap apna sawal yahan pooch sakte hain.</div></div>
 <button onclick="showAdminTab('adminProducts',this)">＋ Add / Manage Products</button>
 <button onclick="showAdminTab('adminOrders',this)">Manage Orders</button>
 <button onclick="showAdminTab('adminCustomers',this)">View Customers</button>
-
+<button onclick="showAdminTab('adminCategories',this)">Manage Categories</button>
 <button onclick="showAdminTab('adminCoupons',this)">Manage Coupons</button>
 <button onclick="showAdminTab('adminReports',this)">Sales Reports</button>
 </div>
@@ -490,7 +490,7 @@ Aap apna sawal yahan pooch sakte hain.</div></div>
 <input type="hidden" id="editProductId">
 <div class="form-row">
 <div class="field"><label>Product name</label><input id="pName" required></div>
-<div class="field"><label>Category</label><input id="pCategory" value="Clothes" readonly><datalist id="categoryOptions"><option value="Clothes"></option></datalist></div>
+<div class="field"><label>Category</label><input id="pCategory" required list="categoryOptions"><datalist id="categoryOptions"></datalist></div>
 </div>
 <div class="form-row">
 <div class="field"><label>Price (₹)</label><input id="pPrice" type="number" min="0" step="0.01" required></div>
@@ -510,7 +510,14 @@ Aap apna sawal yahan pooch sakte hain.</div></div>
 <div class="admin-content"><h3>All Products</h3><div id="adminProductList" class="table-wrap"></div></div>
 </section>
 
-<section id="adminCategories" class="hidden"><div class="admin-content"><h3>Current Store Category</h3><p>Clothes</p><p class="muted">Other categories are hidden and preserved for a future business upgrade.</p></div></section>
+<section id="adminCategories" class="hidden">
+<div class="admin-content">
+<h3>Category Management</h3>
+<div class="field"><label>New category name</label><input id="categoryName"></div>
+<button onclick="addCategory()">＋ Add Category</button>
+<div id="adminCategoryList" class="table-wrap" style="margin-top:15px"></div>
+</div>
+</section>
 
 <section id="adminOrders" class="hidden">
 <div class="admin-content">
@@ -617,7 +624,7 @@ if(!/^https:\/\/[^/]+\.supabase\.co$/.test(SUPABASE_URL)||!SUPABASE_ANON_KEY){
   $('productGrid').innerHTML='<div class="empty">Supabase configuration missing hai. Website administrator se contact karein.</div>';
   throw new Error('Invalid Supabase project configuration');
 }
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{storageKey:'super-mart-customer-auth'}});
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const adminRoute=window.location.pathname.replace(/\/+$/,'')==='/admin';
 
 let products=[],categories=[];
@@ -822,7 +829,7 @@ updateAccountButton();
 async function loadProducts(){
 $('productGrid').innerHTML='<div class="empty">Connecting to SUPER MART...</div>';
 try{
-const {data,error}=await db.from('products').select('*').eq('active',true).eq('category','Clothes').order('created_at',{ascending:false});
+const {data,error}=await db.from('products').select('*').eq('active',true).order('created_at',{ascending:false});
 if(error)throw error;
 products=data||[];
 console.info('SUPER MART Supabase connection successful. Products:',products.length);
@@ -833,18 +840,20 @@ $('productGrid').innerHTML='<div class="empty">Supabase se connection nahi ho pa
 }
 }
 async function loadCategories(){
- categories=[{name:'Clothes'}];
- const sel=$('categoryFilter');
- sel.innerHTML='<option value="Clothes">Clothes</option>';
- sel.value='Clothes';
- $('categoryOptions').innerHTML='<option value="Clothes"></option>';
+const {data,error}=await db.from('categories').select('*').order('name');
+if(error)return;
+categories=data||[];
+const sel=$('categoryFilter');
+const old=sel.value;
+sel.innerHTML='<option value="all">All categories</option>'+categories.map(c=>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+sel.value=categories.some(c=>c.name===old)?old:'all';
+$('categoryOptions').innerHTML=categories.map(c=>`<option value="${escapeHtml(c.name)}">`).join('');
 }
-
 function renderProducts(){
 const q=$('searchInput').value.trim().toLowerCase();
 const cat=$('categoryFilter').value;
 const sort=$('sortFilter').value;
-let list=products.filter(p=>p.category==='Clothes'&&(cat==='all'||cat==='Clothes')&&(!q||[p.name,p.category,p.description].join(' ').toLowerCase().includes(q)));
+let list=products.filter(p=>(cat==='all'||p.category===cat)&&(!q||[p.name,p.category,p.description].join(' ').toLowerCase().includes(q)));
 if(sort==='low')list.sort((a,b)=>a.price-b.price);
 if(sort==='high')list.sort((a,b)=>b.price-a.price);
 if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));
@@ -955,7 +964,7 @@ $('signupTab').classList.toggle('active',mode==='signup');
 }
 $('authForm').addEventListener('submit',async e=>{
 e.preventDefault();
-const email=$('authEmail').value.trim().toLowerCase();
+const email=$('authEmail').value.trim();
 const password=$('authPassword').value;
 const name=$('authName').value.trim();
 const btn=$('authSubmit');
@@ -1401,31 +1410,39 @@ await loadAdminSupportTickets();
 
 /* ADMIN DASHBOARD */
 async function loadAdminDashboard(){
-if(!await requireAdmin())return;
-const [ordersResult,productsResult]=await Promise.all([
- db.from('orders').select('id,total,status,order_items(quantity,price,subtotal,cost_price)'),
- db.from('products').select('id,stock').eq('category','Clothes')
-]);
-if(ordersResult.error||productsResult.error){
- notify('Dashboard data load nahi hua: '+(ordersResult.error?.message||productsResult.error?.message||'Unknown error'));
- return;
-}
-const orders=ordersResult.data||[];
-const activeOrders=orders.filter(o=>String(o.status||'Pending').toLowerCase()!=='cancelled');
-const totalSales=activeOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
-const netProfit=activeOrders.reduce((sum,o)=>{
- const costTotal=(o.order_items||[]).reduce((itemSum,item)=>{
-  return itemSum+(Number(item.cost_price||0)*Number(item.quantity||0));
+ if(!await requireAdmin())return;
+ const [ordersResult,productsResult]=await Promise.all([
+  db.from('orders').select('id,total,status,created_at,order_items(quantity,price,subtotal,cost_price,product_name,product_id)'),
+  db.from('products').select('id,name,stock,active')
+ ]);
+ if(ordersResult.error||productsResult.error){
+  notify('Dashboard data load nahi hua: '+(ordersResult.error?.message||productsResult.error?.message||'Unknown error'));
+  return;
+ }
+ const orders=ordersResult.data||[],products=productsResult.data||[];
+ const nonCancelled=orders.filter(o=>String(o.status||'Pending').toLowerCase()!=='cancelled');
+ const range=$('adminDashboardRange')?.value||'30';
+ const cutoff=new Date();cutoff.setHours(0,0,0,0);
+ if(range!=='all')cutoff.setDate(cutoff.getDate()-Number(range)+1);
+ const inRange=o=>range==='all'||(o.created_at&&new Date(o.created_at)>=cutoff);
+ const periodOrders=nonCancelled.filter(inRange);
+ const totalSales=periodOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
+ const netProfit=periodOrders.reduce((sum,o)=>{
+  const costTotal=(o.order_items||[]).reduce((s,item)=>s+Number(item.cost_price||0)*Number(item.quantity||0),0);
+  return sum+Number(o.total||0)-costTotal;
  },0);
- // Use the final order total so coupon discounts are reflected in realized profit.
- return sum+Number(o.total||0)-costTotal;
-},0);
-const lowStock=(productsResult.data||[]).filter(p=>Number(p.stock||0)<=5).length;
-$('statSales').textContent=money(totalSales);
-$('statProfit').textContent=money(netProfit);
-$('statOrders').textContent=orders.length;
-$('statLowStock').textContent=lowStock;
-await loadAdminRecentOrders();
+ const low=products.filter(p=>p.active!==false&&Number(p.stock||0)<=5).sort((a,b)=>Number(a.stock||0)-Number(b.stock||0));
+ $('statSales').textContent=money(totalSales);$('statProfit').textContent=money(netProfit);$('statOrders').textContent=periodOrders.length;$('statLowStock').textContent=low.length;
+ const totals=new Map();
+ periodOrders.forEach(o=>(o.order_items||[]).forEach(item=>{
+  const name=item.product_name||('Product #'+(item.product_id??'unknown'));
+  const old=totals.get(name)||{qty:0,sales:0};
+  old.qty+=Number(item.quantity||0);old.sales+=Number(item.price||0)*Number(item.quantity||0);totals.set(name,old);
+ }));
+ const top=[...totals.entries()].map(([name,v])=>({name,...v})).sort((a,b)=>b.qty-a.qty).slice(0,5);
+ $('adminTopProducts').innerHTML=top.length?`<table class="admin-table"><thead><tr><th>Product</th><th>Qty sold</th><th>Sales</th></tr></thead><tbody>${top.map(p=>`<tr><td>${escapeHtml(p.name)}</td><td>${p.qty}</td><td>${money(p.sales)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No sales in this period</div>';
+ $('adminLowStockList').innerHTML=low.length?`<table class="admin-table"><thead><tr><th>Product</th><th>Stock</th><th>Alert</th></tr></thead><tbody>${low.slice(0,10).map(p=>`<tr><td>${escapeHtml(p.name)}</td><td>${Number(p.stock||0)}</td><td>${Number(p.stock||0)===0?'Out of stock':'Low stock'}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">All active products have sufficient stock</div>';
+ await loadAdminRecentOrders();
 }
 async function loadAdminRecentOrders(){
 if(!await requireAdmin())return;
@@ -1443,7 +1460,7 @@ $('adminRecentOrders').innerHTML=`<table class="admin-table">
 /* ADMIN PRODUCTS */
 async function loadAdminProducts(){
 if(!await requireAdmin())return;
-const {data,error}=await db.from('products').select('*').eq('category','Clothes').order('created_at',{ascending:false});
+const {data,error}=await db.from('products').select('*').order('created_at',{ascending:false});
 if(error){$('adminProductList').textContent=error.message;return;}
 $('adminProductList').innerHTML=`<table class="admin-table">
 <thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
@@ -1478,7 +1495,7 @@ event.preventDefault();
 if(!await requireAdmin())return;
 const id=$('editProductId').value;
 const product={
-name:$('pName').value.trim(),category:'Clothes',
+name:$('pName').value.trim(),category:$('pCategory').value.trim(),
 price:Number($('pPrice').value),old_price:Number($('pOldPrice').value)||null,
 stock:Number($('pStock').value),cost_price:Number($('pCostPrice').value),emoji:$('pEmoji').value.trim()||'🛍️',
 image_url:$('pImage').value.trim()||null,
@@ -1504,13 +1521,33 @@ await loadProducts();await loadAdminProducts();await loadAdminDashboard();
 /* ADMIN CATEGORIES */
 async function loadAdminCategories(){
 if(!await requireAdmin())return;
-categories=[{name:'Clothes'}];
-$('adminCategoryList').innerHTML='<div class="admin-table"><b>Clothes</b><p class="muted">Other categories are hidden and preserved for future use.</p></div>';
-$('categoryOptions').innerHTML='<option value="Clothes">';
-$('categoryFilter').innerHTML='<option value="Clothes">Clothes</option>';
+const {data,error}=await db.from('categories').select('*').order('name');
+if(error){$('adminCategoryList').textContent=error.message;return;}
+categories=data||[];
+$('adminCategoryList').innerHTML=`<table class="admin-table">
+<thead><tr><th>Category</th><th>Action</th></tr></thead>
+<tbody>${categories.map(c=>`<tr><td>${escapeHtml(c.name)}</td><td><button class="danger" onclick="deleteCategory(${c.id})">Delete</button></td></tr>`).join('')}</tbody></table>`;
+$('categoryOptions').innerHTML=categories.map(c=>`<option value="${escapeHtml(c.name)}">`).join('');
+$('categoryFilter').innerHTML='<option value="all">All categories</option>'+categories.map(c=>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
 }
-async function addCategory(){notify('Only Clothes category is enabled right now.');}
-async function deleteCategory(){notify('Clothes category is locked.');}
+async function addCategory(){
+if(!await requireAdmin())return;
+const name=$('categoryName').value.trim();
+if(!name)return notify('Enter category name');
+const {error}=await db.from('categories').insert({name});
+if(error){notify(error.message);return;}
+$('categoryName').value='';
+notify('Category added');
+await loadCategories();await loadAdminCategories();
+}
+async function deleteCategory(id){
+if(!await requireAdmin())return;
+if(!confirm('Delete this category?'))return;
+const {error}=await db.from('categories').delete().eq('id',id);
+if(error){notify(error.message);return;}
+notify('Category deleted');
+await loadCategories();await loadAdminCategories();
+}
 
 /* ADMIN ORDERS */
 const ORDER_STATUSES=['Pending','Processing','Shipped','Out for Delivery','Delivered','Cancelled'];
