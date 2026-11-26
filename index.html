@@ -347,8 +347,14 @@ Aap apna sawal yahan pooch sakte hain.</div></div>
 </div>
 <div class="field"><label>Full address</label><textarea id="customerAddress" required></textarea></div>
 <div class="form-row">
-<div class="field"><label>City</label><input id="customerCity" required></div>
-<div class="field"><label>State</label><input id="customerState" required autocomplete="address-level1" placeholder="Enter state"></div>
+<div class="field"><label for="customerState">State / UT</label>
+<select id="customerState" required onchange="updateCityOptions()">
+<option value="">Select State / UT</option>
+<option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chhattisgarh</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Punjab</option><option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option>
+<option>Andaman and Nicobar Islands</option><option>Chandigarh</option><option>Dadra and Nagar Haveli and Daman and Diu</option><option>Delhi</option><option>Jammu and Kashmir</option><option>Ladakh</option><option>Lakshadweep</option><option>Puducherry</option>
+</select></div>
+<div class="field"><label for="customerCity">City</label>
+<select id="customerCity" required disabled><option value="">First select State / UT</option></select></div>
 <div class="field"><label>PIN code</label><input id="customerPin" required inputmode="numeric" pattern="[0-9]{6}"></div>
 </div>
 <div class="field"><label>Coupon Code</label><div style="display:flex;gap:8px">
@@ -1055,6 +1061,51 @@ updateCheckoutSummary();
 }catch(err){
 appliedCoupon=null;msg.textContent=err.message;msg.style.color='red';updateCheckoutSummary();
 }finally{btn.disabled=false;btn.textContent='Apply';}
+}
+const citiesByState={
+'Andhra Pradesh':['Amaravati','Anantapur','Chittoor','Eluru','Guntur','Kadapa','Kakinada','Kurnool','Machilipatnam','Nellore','Ongole','Rajahmundry','Tirupati','Vijayawada','Visakhapatnam'],
+'Arunachal Pradesh':['Itanagar','Naharlagun','Pasighat','Tawang','Ziro'],
+'Assam':['Dibrugarh','Dispur','Guwahati','Jorhat','Nagaon','Silchar','Tezpur','Tinsukia'],
+'Bihar':['Arrah','Begusarai','Bhagalpur','Bihar Sharif','Darbhanga','Gaya','Muzaffarpur','Patna','Purnia'],
+'Chhattisgarh':['Ambikapur','Bhilai','Bilaspur','Durg','Korba','Raipur','Rajnandgaon'],
+'Goa':['Mapusa','Margao','Panaji','Ponda','Vasco da Gama'],
+'Gujarat':['Ahmedabad','Anand','Bhavnagar','Bhuj','Gandhinagar','Jamnagar','Junagadh','Mehsana','Morbi','Rajkot','Surat','Vadodara'],
+'Haryana':['Ambala','Bhiwani','Faridabad','Gurugram','Hisar','Karnal','Panipat','Rohtak','Sonipat','Yamunanagar'],
+'Himachal Pradesh':['Bilaspur','Dharamshala','Hamirpur','Kullu','Mandi','Shimla','Solan','Una'],
+'Jharkhand':['Bokaro','Deoghar','Dhanbad','Hazaribagh','Jamshedpur','Ranchi'],
+'Karnataka':['Ballari','Belagavi','Bengaluru','Davanagere','Hubballi-Dharwad','Kalaburagi','Mangaluru','Mysuru','Shivamogga','Tumakuru','Udupi'],
+'Kerala':['Alappuzha','Kochi','Kollam','Kottayam','Kozhikode','Palakkad','Thiruvananthapuram','Thrissur'],
+'Madhya Pradesh':['Bhopal','Dewas','Gwalior','Indore','Jabalpur','Ratlam','Rewa','Sagar','Satna','Ujjain'],
+'Maharashtra':['Ahilyanagar','Amravati','Chhatrapati Sambhajinagar','Jalgaon','Kolhapur','Mumbai','Nagpur','Nanded','Nashik','Navi Mumbai','Pune','Sangli','Solapur','Thane'],
+'Manipur':['Bishnupur','Churachandpur','Imphal','Thoubal'],
+'Meghalaya':['Cherrapunji','Jowai','Shillong','Tura'],
+'Mizoram':['Aizawl','Champhai','Kolasib','Lunglei'],
+'Nagaland':['Dimapur','Kohima','Mokokchung','Tuensang'],
+'Odisha':['Balasore','Berhampur','Bhubaneswar','Cuttack','Puri','Rourkela','Sambalpur'],
+'Punjab':['Amritsar','Bathinda','Jalandhar','Ludhiana','Mohali','Pathankot','Patiala'],
+'Rajasthan':['Ajmer','Alwar','Bikaner','Jaipur','Jaisalmer','Jodhpur','Kota','Udaipur'],
+'Sikkim':['Gangtok','Gyalshing','Mangan','Namchi'],
+'Tamil Nadu':['Chennai','Coimbatore','Erode','Hosur','Madurai','Salem','Thanjavur','Tiruchirappalli','Tirunelveli','Vellore'],
+'Telangana':['Hyderabad','Karimnagar','Khammam','Mahbubnagar','Nizamabad','Warangal'],
+'Tripura':['Agartala','Belonia','Dharmanagar','Kailashahar','Udaipur'],
+'Uttar Pradesh':['Agra','Aligarh','Ayodhya','Bareilly','Etawah','Ghaziabad','Gorakhpur','Greater Noida','Jhansi','Kanpur','Lucknow','Mathura','Meerut','Moradabad','Noida','Prayagraj','Saharanpur','Varanasi'],
+'Uttarakhand':['Dehradun','Haldwani','Haridwar','Kashipur','Kotdwar','Roorkee','Rudrapur'],
+'West Bengal':['Asansol','Bardhaman','Durgapur','Howrah','Kharagpur','Kolkata','Siliguri'],
+'Andaman and Nicobar Islands':['Bamboo Flat','Car Nicobar','Diglipur','Port Blair'],
+'Chandigarh':['Chandigarh'],
+'Dadra and Nagar Haveli and Daman and Diu':['Daman','Diu','Silvassa'],
+'Delhi':['Delhi','New Delhi'],
+'Jammu and Kashmir':['Anantnag','Baramulla','Jammu','Srinagar','Udhampur'],
+'Ladakh':['Kargil','Leh'],
+'Lakshadweep':['Agatti','Andrott','Kavaratti','Minicoy'],
+'Puducherry':['Karaikal','Mahe','Puducherry','Yanam']
+};
+function updateCityOptions(){
+ const state=$('customerState').value;
+ const city=$('customerCity');
+ city.innerHTML='<option value="">Select City</option>';
+ (citiesByState[state]||[]).forEach(name=>{const option=document.createElement('option');option.value=name;option.textContent=name;city.appendChild(option);});
+ city.disabled=!state;
 }
 const customerPhoneInput=$('customerPhone');
 const customerPhoneError=$('customerPhoneError');
