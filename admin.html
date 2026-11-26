@@ -139,7 +139,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <aside class="sidebar">
    <button class="active" data-page="dashboard" onclick="navigate('dashboard',this)">▦ Dashboard</button>
    <button data-page="products" onclick="navigate('products',this)">▣ Products</button>
-   <button data-page="categories" onclick="navigate('categories',this)">▤ Categories</button>
+   
    <button data-page="orders" onclick="navigate('orders',this)">▧ Orders</button>
    <button data-page="support" onclick="navigate('support',this)">✉ Support</button>
    <button data-page="customers" onclick="navigate('customers',this)">♙ Customers</button>
@@ -164,9 +164,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
     <div class="table-wrap"><table class="table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead><tbody id="productsBody"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody></table></div>
    </section>
    <section id="page-categories" class="page hidden">
-    <div class="page-head"><h1>Categories</h1></div>
-    <div class="form-panel" style="margin-bottom:15px"><h3>Add Category</h3><div class="toolbar" style="margin:0"><input id="categoryName" placeholder="Enter category name"><button onclick="addCategory()">Add Category</button></div></div>
-    <div class="panel"><h3>All Categories</h3><div id="categoryList" class="empty">Loading...</div></div>
+    <div class="page-head"><h1>Store Category</h1></div>
+    <div class="panel"><h3>Clothes</h3><p class="muted">Only Clothes category is enabled. Other categories are hidden and preserved for a future business upgrade.</p></div>
    </section>
    <section id="page-orders" class="page hidden">
     <div class="page-head"><h1>Orders</h1><button class="secondary" onclick="loadOrders()">↻ Refresh</button></div>
@@ -199,7 +198,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <div id="productModal" class="modal-backdrop"><div class="modal"><div class="modal-head"><h3 id="productModalTitle">Add Product</h3><button class="secondary" onclick="closeProductForm()">✕</button></div>
  <form id="productForm"><input type="hidden" id="pId"><div class="grid-form">
   <div class="field"><label>Product Name *</label><input id="pName" required></div>
-  <div class="field"><label>Category</label><input id="pCategory" list="categoryOptions" placeholder="Category"><datalist id="categoryOptions"></datalist></div>
+  <div class="field"><label>Category</label><input id="pCategory" value="Clothes" readonly><datalist id="categoryOptions"><option value="Clothes"></option></datalist></div>
   <div class="field"><label>Price (₹) *</label><input id="pPrice" type="number" min="0" step="0.01" required></div>
   <div class="field"><label>Supplier Cost Price (₹) *</label><input id="pCostPrice" type="number" min="0" step="0.01" value="0" required></div>
   <div class="field"><label>Old Price</label><input id="pOldPrice" type="number" min="0" step="0.01"></div>
@@ -216,7 +215,6 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <script>
 const SUPABASE_URL='https://kmyrqipubmwzvjokwmli.supabase.co';
 const SUPABASE_KEY='sb_publishable_K5g61U2Pr9iPyIxbcmyEvw_Dvysu-4O';
-// Keep admin authentication separate from the customer website session.
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storageKey:'super-mart-admin-auth'}});
 const $=id=>document.getElementById(id);
 let currentUser=null;
@@ -253,7 +251,7 @@ async function loadDashboard(){
  const [ordersResult,itemsResult,productsResult]=await Promise.all([
   db.from('orders').select('id,total,status,created_at'),
   db.from('order_items').select('order_id,quantity,price,cost_price'),
-  db.from('products').select('id,stock,active')
+  db.from('products').select('id,stock,active').eq('category','Clothes')
  ]);
  const err=ordersResult.error||itemsResult.error||productsResult.error;
  if(err){notify('Dashboard load failed: '+err.message);['statSales','statProfit','statOpenOrders','statLowStock'].forEach(id=>$(id).textContent='—');return;}
@@ -276,7 +274,7 @@ async function loadDashboard(){
 
 /* PRODUCTS */
 async function loadProducts(){
- const {data,error}=await db.from('products').select('*').order('created_at',{ascending:false});
+ const {data,error}=await db.from('products').select('*').eq('category','Clothes').order('created_at',{ascending:false});
  if(error){$('productsBody').innerHTML=`<tr><td colspan="6" class="empty">${esc(error.message)}</td></tr>`;return;}
  productsCache=data||[];renderProducts();
 }
@@ -288,7 +286,7 @@ function renderProducts(){
 }
 async function openProductForm(){await loadCategoryOptions();$('productForm').reset();$('pId').value='';$('pActive').checked=true;$('productModalTitle').textContent='Add Product';$('productModal').style.display='grid';}
 function closeProductForm(){$('productModal').style.display='none';}
-async function loadCategoryOptions(){const {data}=await db.from('categories').select('name').order('name');categoriesCache=data||[];$('categoryOptions').innerHTML=categoriesCache.map(c=>`<option value="${esc(c.name)}"></option>`).join('');}
+async function loadCategoryOptions(){categoriesCache=[{name:'Clothes'}];$('categoryOptions').innerHTML='<option value="Clothes"></option>';}
 async function editProduct(id){
  const p=productsCache.find(x=>x.id===id);if(!p)return;await loadCategoryOptions();
  $('pId').value=p.id;$('pName').value=p.name||'';$('pCategory').value=p.category||'';$('pPrice').value=p.price??'';$('pCostPrice').value=p.cost_price??0;$('pOldPrice').value=p.old_price??'';$('pStock').value=p.stock??0;$('pEmoji').value=p.emoji||'';$('pImage').value=p.image_url||'';$('pDescription').value=p.description||'';$('pActive').checked=!!p.active;
@@ -296,7 +294,7 @@ async function editProduct(id){
 }
 $('productForm').addEventListener('submit',async e=>{
  e.preventDefault();const id=$('pId').value;
- const payload={name:$('pName').value.trim(),category:$('pCategory').value.trim()||null,price:Number($('pPrice').value),cost_price:Number($('pCostPrice').value),old_price:$('pOldPrice').value===''?null:Number($('pOldPrice').value),stock:Number($('pStock').value||0),emoji:$('pEmoji').value.trim()||null,image_url:$('pImage').value.trim()||null,description:$('pDescription').value.trim()||null,active:$('pActive').checked};
+ const payload={name:$('pName').value.trim(),category:'Clothes',price:Number($('pPrice').value),cost_price:Number($('pCostPrice').value),old_price:$('pOldPrice').value===''?null:Number($('pOldPrice').value),stock:Number($('pStock').value||0),emoji:$('pEmoji').value.trim()||null,image_url:$('pImage').value.trim()||null,description:$('pDescription').value.trim()||null,active:$('pActive').checked};
  if(!payload.name){notify('Product name required');return;}
  const result=id?await db.from('products').update(payload).eq('id',id):await db.from('products').insert([payload]);
  if(result.error){notify('Save failed: '+result.error.message);return;}
@@ -306,22 +304,12 @@ async function toggleProduct(id,active){const {error}=await db.from('products').
 async function deleteProduct(id){if(!confirm('Permanently delete this product?'))return;const {error}=await db.from('products').delete().eq('id',id);if(error){notify('Delete failed: '+error.message);return;}notify('Product deleted');loadProducts();}
 /* CATEGORIES */
 async function loadCategories(){
- const list=$('categoryList');list.textContent='Loading...';
- const {data,error}=await db.from('categories').select('*').order('name',{ascending:true});
- if(error){list.innerHTML='<div class="empty">Load failed: '+esc(error.message)+'</div>';return;}
- categoriesCache=data||[];
- list.innerHTML=categoriesCache.length?categoriesCache.map(c=>`<div class="category-row"><div><b>${esc(c.name)}</b><br><small class="muted">Category ID: ${c.id}</small></div><button class="danger" onclick="deleteCategory(${c.id})">Delete</button></div>`).join(''):'<div class="empty">No categories yet</div>';
+ const list=$('categoryList');
+ if(list)list.innerHTML='<div class="category-row"><b>Clothes</b><span class="muted">Only active store category</span></div><p class="muted">Other categories are hidden and preserved for future use.</p>';
+ categoriesCache=[{name:'Clothes'}];
 }
-async function addCategory(){
- const input=$('categoryName'),name=input.value.trim();if(!name){notify('Enter category name');return;}
- if(categoriesCache.some(c=>String(c.name).toLowerCase()===name.toLowerCase())){notify('Category already exists');return;}
- const {error}=await db.from('categories').insert([{name}]);if(error){notify('Add failed: '+error.message);return;}
- input.value='';notify('Category added');await loadCategories();
-}
-async function deleteCategory(id){
- const c=categoriesCache.find(x=>x.id===id);if(!confirm(`Delete category "${c?.name||id}"? This does not delete products.`))return;
- const {error}=await db.from('categories').delete().eq('id',id);if(error){notify('Delete failed: '+error.message);return;}notify('Category deleted');await loadCategories();
-}
+async function addCategory(){notify('Only Clothes category is enabled right now.');}
+async function deleteCategory(){notify('Clothes category is locked.');}
 /* ORDER HELPERS */
 function statusPill(s){const v=String(s||'Pending'),cls=v.toLowerCase()==='delivered'?'green':v.toLowerCase()==='cancelled'?'red':v.toLowerCase()==='pending'?'orange':'';return `<span class="pill ${cls}">${esc(v)}</span>`;}
 function dateText(v){return v?new Date(v).toLocaleString('en-IN'):'—';}
