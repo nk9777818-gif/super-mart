@@ -1067,7 +1067,6 @@ pin:$('customerPin').value.trim()
 };
 const {data,error}=await db.rpc('place_order',{
 p_items:items,p_address:address,
-p_state:address.state,
 p_payment_method:'Cash on Delivery',
 p_coupon_code:appliedCoupon?.code||null
 });
@@ -1715,6 +1714,19 @@ await loadCategories();
 await loadProducts();
 }
 init();
+
+// Keep customer stock, order status, and support conversations fresh across devices.
+setInterval(async()=>{
+ if(document.visibilityState==='hidden')return;
+ try{
+  await loadProducts();
+  if($('ordersModal')?.classList.contains('show'))await openOrders();
+  if($('supportModal')?.classList.contains('show')){
+   if(customerSelectedTicket)await loadCustomerMessages(customerSelectedTicket);
+   else await loadCustomerTickets();
+  }
+ }catch(error){console.warn('SUPER MART background refresh:',error.message||error);}
+},20000);
 </script>
 </body>
 </html>
