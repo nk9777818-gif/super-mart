@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+// Send the legacy admin route to the standalone Amazon-style admin panel.
+if (window.location.pathname.replace(/\/+$/, '') === '/admin') {
+  window.location.replace('/admin.html' + window.location.search + window.location.hash);
+}
+</script>
+<link rel="manifest" href="/manifest.webmanifest">
+<title>SUPER MART | Online Shopping</title>
+<meta name="google-site-verification" content="1yse6GaKz7p-hE0x2k__0s-vem-KeoAo1k45_ig7jYc">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LYTGMNSWYT"></script>
+<script>
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments)}
+gtag('js',new Date());gtag('config','G-LYTGMNSWYT');
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{--dark:#131921;--nav:#232f3e;--orange:#ff9900;--bg:#eaeded;--white:#fff;--muted:#667085;--red:#c62828}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#17202a}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:7px;padding:10px 14px;background:var(--orange);color:#111;font-weight:700}
+button:disabled{opacity:.55;cursor:not-allowed}
+.top{background:var(--dark);color:white;padding:13px 4%;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.logo{font-size:25px;font-weight:900;white-space:nowrap}
+.logo span{color:var(--orange)}
+.search{display:flex;flex:1;min-width:210px}
+.search input{width:100%;padding:12px;border:0;border-radius:7px 0 0 7px}
+.search button{border-radius:0 7px 7px 0}
+.top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.top-actions button{background:transparent;color:white;border:1px solid #667085}
+.nav{background:var(--nav);color:white;padding:10px 4%;display:flex;gap:18px;overflow:auto;white-space:nowrap}
+.nav a{color:white;text-decoration:none;cursor:pointer}
+.hero{margin:16px auto;max-width:1400px;padding:28px 5%;background:linear-gradient(110deg,#172536,#354b61);color:white;border-radius:10px}
+.hero h1{margin:0 0 8px;font-size:clamp(25px,4vw,42px)}
+.hero p{color:#e6e9ed}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px 35px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:20px 0 12px;flex-wrap:wrap}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filters select{padding:9px;border:1px solid #ccd1d8;border-radius:7px;background:white}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.product{background:white;border-radius:9px;padding:13px;box-shadow:0 1px 4px #00000012;display:flex;flex-direction:column;min-width:0}
+.product .pic{height:155px;background:#f6f7f8;border-radius:7px;display:grid;place-items:center;overflow:hidden;font-size:65px}
+.product img{width:100%;height:100%;object-fit:contain}
+.product h3{font-size:16px;margin:11px 0 6px}
+.muted{color:var(--muted);font-size:13px}
+.price{font-size:19px;font-weight:800;margin:8px 0}
+.old{color:#777;text-decoration:line-through;font-size:13px;margin-left:6px}
+.product .actions{display:flex;gap:7px;margin-top:auto}
+.product .actions button{flex:1;padding:9px 5px}
+.secondary{background:#e8edf2;color:#17202a}
+.danger{background:#c62828;color:white}
+.panel{background:white;border-radius:10px;padding:17px;margin:16px 0}
+.empty{text-align:center;padding:35px;background:white;border-radius:10px;color:#667085}
+.modal-backdrop{display:none;position:fixed;inset:0;background:#0009;z-index:20;align-items:center;justify-content:center;padding:14px}
+.modal-backdrop.show{display:flex}
+.modal{background:white;width:min(560px,100%);max-height:92vh;overflow:auto;border-radius:12px;padding:19px}
+.modal.wide{width:min(1100px,100%)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.modal-head h2{margin:0}
+.close{background:#edf0f3;padding:7px 11px}
+.field{margin:11px 0}
+.field label{display:block;font-weight:700;font-size:13px;margin-bottom:5px}
+.field input,.field textarea,.field select{width:100%;padding:11px;border:1px solid #cbd2d9;border-radius:7px;background:white}
+.field textarea{min-height:75px;resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.notice{padding:10px;background:#fff6df;border-radius:7px;font-size:13px;margin:10px 0}
+.total-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee}
+.hidden{display:none!important}
+.tabs{display:flex;gap:7px;overflow:auto;margin-bottom:14px}
+.tabs button{white-space:nowrap}
+.tabs button.active{background:var(--nav);color:white}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;background:white;font-size:13px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid #e7e9ec;vertical-align:top}
+th{background:#f2f4f6}
+.status{padding:4px 8px;border-radius:20px;background:#e8f5e9;color:#176b31;font-size:12px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#17202a;color:white;padding:12px 18px;border-radius:8px;z-index:150;display:none;max-width:92%;text-align:center}
+.toast.show{display:block}
+.cart-line{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;border-bottom:1px solid #eee;padding:10px 0}
+.qty{display:flex;gap:7px;align-items:center}
+.qty button{padding:5px 9px}
+.footer{background:var(--dark);color:#ddd;text-align:center;padding:24px;margin-top:25px}
+.footer a{color:var(--orange);margin:8px;text-decoration:none}
+
+/* AI SUPPORT */
+#aiChatButton{position:fixed;right:18px;bottom:82px;z-index:100;border-radius:50px;padding:14px 19px;background:#ff9900;color:#111;box-shadow:0 3px 12px #0004}
+#aiChatBox{display:none;position:fixed;right:15px;bottom:145px;width:min(360px,calc(100% - 30px));height:470px;max-height:75vh;background:white;border-radius:13px;box-shadow:0 5px 25px #0004;z-index:101;overflow:hidden}
+#aiChatBox.open{display:flex;flex-direction:column}
+.aiChatHeader{background:#131921;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center}
+.aiChatHeader button{background:transparent;color:white}
+#aiChatMessages{flex:1;overflow-y:auto;padding:12px;background:#f4f6f8}
+.aiMessage{padding:10px 12px;margin:8px 0;border-radius:10px;max-width:85%;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.aiUser{background:#ffe2ad;margin-left:auto}
+.aiBot{background:white;border:1px solid #e5e7eb;margin-right:auto}
+.aiChatInput{display:flex;gap:7px;padding:10px;border-top:1px solid #ddd}
+.aiChatInput input{flex:1;min-width:0;padding:11px;border:1px solid #ccc;border-radius:7px}
+
+/* ADMIN */
+#adminModal .modal{background:#f4f6fa;padding:0;overflow-x:hidden}
+#adminModal .modal-head{background:#131921;color:white;padding:18px 22px;margin:0}
+#adminModal .modal-head h2{font-size:20px}
+#adminModal .close{background:#344054;color:white}
+.admin-layout{display:grid;grid-template-columns:205px minmax(0,1fr);min-height:600px}
+.admin-sidebar{background:#1d2939;padding:17px 10px;color:white}
+.admin-brand{font-size:19px;font-weight:900;padding:10px;margin-bottom:15px}
+.admin-brand span{color:#ff9900}
+.admin-menu{display:flex;flex-direction:column;gap:6px}
+.admin-menu button{background:transparent;color:#d0d5dd;text-align:left;border-radius:7px;padding:12px;font-size:13px}
+.admin-menu button.active,.admin-menu button:hover{background:#344054;color:white}
+.admin-main{min-width:0;padding:20px}
+.admin-welcome{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.admin-welcome h2{margin:0 0 5px}
+.admin-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.admin-card{background:white;border:1px solid #e4e7ec;border-radius:11px;padding:16px;min-width:0}
+.admin-card small{color:#667085}
+.admin-card strong{display:block;font-size:25px;margin-top:9px;overflow-wrap:anywhere}
+.admin-card .admin-icon{font-size:22px;margin-bottom:9px}
+.admin-content{background:white;border:1px solid #e4e7ec;border-radius:11px;padding:17px;margin-bottom:15px;min-width:0}
+.admin-content h3{margin:0 0 15px}
+.admin-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.admin-toolbar input,.admin-toolbar select{padding:10px;border:1px solid #d0d5dd;border-radius:7px;max-width:100%}
+.admin-action{display:flex;flex-wrap:wrap;gap:6px}
+.admin-action button{font-size:12px;padding:8px 10px}
+.admin-table{min-width:750px}
+.admin-status{padding:5px 9px;border-radius:20px;background:#eaf2ff;color:#175cd3;font-size:12px;white-space:nowrap}
+.admin-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.admin-shortcuts button{background:#f2f4f7;color:#17202a;padding:15px 8px;min-height:65px}
+.admin-shortcuts button:hover{background:#e4e7ec}
+.admin-bar{height:10px;border-radius:20px;background:#eaecf0;overflow:hidden;margin-top:8px}
+.admin-bar span{display:block;height:100%;background:#ff9900;border-radius:20px}
+.admin-note{width:180px;min-width:130px;padding:7px;border:1px solid #ddd;border-radius:6px}
+.admin-status-select{padding:8px;border:1px solid #ddd;border-radius:6px;max-width:145px}
+
+/* SUPPORT TICKETS */
+.support-ticket{background:#fff;border:1px solid #e4e7ec;padding:12px;border-radius:9px;margin:9px 0;cursor:pointer}
+.support-ticket:hover{background:#fff8e8}
+.support-chat{height:300px;overflow-y:auto;background:#f2f4f7;padding:12px;border-radius:9px;margin:12px 0}
+.support-msg{padding:10px 12px;border-radius:10px;margin:8px 0;max-width:85%;overflow-wrap:anywhere;white-space:pre-wrap;font-size:14px}
+.support-customer{background:#ffe2ad;margin-left:auto}
+.support-admin{background:white;border:1px solid #ddd;margin-right:auto}
+.support-meta{font-size:11px;color:#667085;margin-top:5px}
+.support-status{display:inline-block;padding:4px 8px;border-radius:20px;background:#fff0c2;color:#805400;font-size:11px}
+.support-status.resolved{background:#dcfce7;color:#166534}
+.support-status.inprogress{background:#dbeafe;color:#1d4ed8}
+.support-admin-grid{display:grid;grid-template-columns:minmax(220px, .8fr) minmax(0,1.5fr);gap:14px}
+.support-list{max-height:500px;overflow:auto}
+.support-compose{display:flex;gap:8px;align-items:flex-end}
+.support-compose textarea{flex:1;min-height:45px;max-height:120px;padding:10px;border:1px solid #ccd1d8;border-radius:7px}
+.support-compose button{height:45px}
+.support-chat-head{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.support-chat-head select{padding:8px;border:1px solid #ccd1d8;border-radius:7px}
+#adminLoginPage{display:none;min-height:100vh;background:linear-gradient(135deg,#101828,#344054);align-items:center;justify-content:center;padding:20px}
+#adminLoginPage.show{display:flex}
+.admin-login-card{width:min(420px,100%);background:white;border-radius:16px;padding:28px;box-shadow:0 15px 45px #0005}
+.admin-login-logo{text-align:center;font-size:30px;font-weight:900;margin-bottom:8px}
+.admin-login-logo span{color:#ff9900}
+.admin-login-subtitle{text-align:center;color:#667085;margin-bottom:24px;font-size:14px}
+.admin-login-card h2{text-align:center;margin:10px 0}
+.admin-login-card .field{margin:15px 0}
+.admin-login-card input{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:8px}
+.admin-login-card button[type=submit]{width:100%;padding:13px;margin-top:8px}
+#adminLoginMessage{font-size:13px;color:#c62828;min-height:20px;margin-top:12px;text-align:center}
+.admin-login-back{text-align:center;margin-top:18px}
+.admin-login-back a{color:#475467;text-decoration:none;font-size:13px}
+.admin-route .top,.admin-route .nav,.admin-route .hero,.admin-route .wrap,.admin-route .footer,.admin-route #aiChatButton,.admin-route #aiChatBox{display:none!important}
+.admin-route #adminLoginPage{display:flex}
+.admin-route #adminLoginPage.hidden{display:none!important}
+.admin-route #adminModal.show{display:flex}
+
+@media(max-width:760px){
+.admin-layout{grid-template-columns:1fr}
+.admin-sidebar{padding:10px}
+.admin-brand{display:none}
+.admin-menu{flex-direction:row;overflow-x:auto;padding-bottom:5px}
+.admin-menu button{white-space:nowrap}
+.admin-main{padding:12px}
+.admin-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+.admin-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}
+.support-admin-grid{grid-template-columns:1fr}
+.support-list{max-height:220px}
+}
+@media(max-width:600px){
+.top{gap:10px}.top-actions{width:100%}.top-actions button{flex:1}
+.hero{margin:10px}.form-row{grid-template-columns:1fr}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.product{padding:9px}.product .pic{height:125px}
+.product .actions{flex-direction:column}
+.wrap{padding:0 10px 25px}
+.cart-line{grid-template-columns:1fr auto}
+.cart-line .line-total{grid-column:1/-1;text-align:right}
+.admin-login-card{padding:22px}
+}
+</style>
+</head>
+<body>
+
+<div id="adminLoginPage">
+<div class="admin-login-card">
+<div class="admin-login-logo">SUPER <span>MART</span></div>
+<div class="admin-login-subtitle">SECURE ADMINISTRATION PORTAL</div>
+<h2>Admin Login</h2>
+<p class="muted" style="text-align:center">Sign in to manage your store</p>
+<form id="adminLoginForm">
+<div class="field"><label for="adminUsername">Admin Username</label><input id="adminUsername" type="text" value="admin" autocomplete="username" required></div>
+<div class="field"><label for="adminPassword">Password</label><input id="adminPassword" type="password" placeholder="Enter admin password" autocomplete="current-password" required></div>
+<button id="adminLoginButton" type="submit">Login to Dashboard</button>
+<div id="adminLoginMessage" role="alert"></div>
+</form>
+<div class="admin-login-back"><a href="/">← Back to SUPER MART Store</a></div>
+</div>
+</div>
+
+<header class="top">
+<div class="logo">SUPER <span>MART</span></div>
+<div class="search"><input id="searchInput" placeholder="Search products..." oninput="renderProducts()"><button onclick="renderProducts()">Search</button></div>
+<div class="top-actions">
+<button id="accountButton" onclick="openAuth()">Account / Login</button>
+<button onclick="openProfile()">My Profile</button>
+<button onclick="openSettings()">Settings</button>
+<button id="logoutButton" onclick="signOut()">Log Out</button>
+<button onclick="openOrders()">My Orders</button>
+<button onclick="openCart()">Cart (<span id="cartCount">0</span>)</button>
+</div>
+</header>
+
+<nav class="nav">
+<a onclick="setCategory('all')">All</a>
+<a onclick="openAuth()">Sign in</a>
+<a onclick="openOrders()">Your Orders</a>
+<a onclick="openCart()">Cart</a>
+<a onclick="openSupport()">Contact Us</a>
+</nav>
+
+<section class="hero">
+<h1>Welcome to SUPER MART</h1>
+<p>Shop your everyday essentials at great prices.</p>
+<button onclick="document.getElementById('productsSection').scrollIntoView({behavior:'smooth'})">Shop Now</button>
+</section>
+
+<main class="wrap">
+<div class="section-head" id="productsSection">
+<h2>Our Products</h2>
+<div class="filters">
+<select id="categoryFilter" onchange="renderProducts()"><option value="all">All categories</option></select>
+<select id="sortFilter" onchange="renderProducts()">
+<option value="default">Sort: Featured</option>
+<option value="low">Price: Low to High</option>
+<option value="high">Price: High to Low</option>
+<option value="name">Name</option>
+</select>
+</div>
+</div>
+<div id="productGrid" class="grid"><div class="empty">Loading products...</div></div>
+</main>
+
+<footer class="footer">
+<div>© <span id="year"></span> SUPER MART · Online Shopping</div>
+<div style="margin-top:12px">
+<a href="#" onclick="openSupport();return false;">Contact Us</a>
+<a href="#" onclick="openModal('privacyModal');return false;">Privacy Policy</a>
+<a href="#" onclick="openModal('termsModal');return false;">Terms & Conditions</a>
+<a href="#" onclick="openModal('returnPolicyModal');return false;">7-Day Return &amp; Refund Policy</a>
+</div>
+</footer>
+
+<button id="aiChatButton" onclick="toggleAIChat()">💬 AI Support</button>
+<div id="aiChatBox">
+<div class="aiChatHeader"><div><b>SUPER MART Support</b><div style="font-size:12px;color:#ddd">Customer Help Assistant</div></div><button onclick="toggleAIChat()">✕</button></div>
+<div id="aiChatMessages"><div class="aiMessage aiBot">Namaste! Welcome to SUPER MART 👋
+Aap apna sawal yahan pooch sakte hain.</div></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px;background:white">
+<button class="secondary" style="font-size:11px;padding:7px" onclick="quickAIMessage('How can I track my order?')">Order Tracking</button>
+<button class="secondary" style="font-size:11px;padding:7px" onclick="quickAIMessage('What is the delivery time?')">Delivery</button>
+<button class="secondary" style="font-size:11px;padding:7px" onclick="quickAIMessage('How can I return a product?')">Returns</button>
+</div>
+<form class="aiChatInput" onsubmit="sendAIMessage(event)">
+<input id="aiChatInput" placeholder="Type your message..." maxlength="1000" required>
+<button type="submit">Send</button>
+</form>
+</div>
+
+<div class="modal-backdrop" id="privacyModal"><div class="modal wide">
+<div class="modal-head"><h2>SUPER MART Privacy Policy</h2><button class="close" onclick="closeModal('privacyModal')">✕</button></div>
+<h3>1. Introduction</h3><p>Welcome to SUPER MART. We respect your privacy and aim to protect your personal information.</p>
+<h3>2. Information We Collect</h3><p>We may collect your name, email address, phone number, delivery address, account details and order information.</p>
+<h3>3. How We Use Your Information</h3><ul><li>To create and manage customer accounts.</li><li>To process and deliver orders.</li><li>To provide customer support.</li><li>To improve our website and services.</li></ul>
+<h3>4. Payment Information</h3><p>Currently, SUPER MART offers Cash on Delivery.</p>
+<h3>5. Cookies and Storage</h3><p>Our website may use browser storage to remember your shopping cart and preferences.</p>
+<h3>6. Third-Party Services</h3><p>We use Supabase for database and authentication services and Netlify for hosting.</p>
+<h3>7. Data Security</h3><p>We take reasonable steps to protect customer information.</p>
+<h3>8. Your Rights</h3><p>You may contact us to request correction or deletion of your personal information.</p>
+<p>Email: nkmart.help@gmail.com</p>
+</div></div>
+
+<div class="modal-backdrop" id="termsModal"><div class="modal wide">
+<div class="modal-head"><h2>SUPER MART Terms & Conditions</h2><button class="close" onclick="closeModal('termsModal')">✕</button></div>
+<h3>1. Acceptance of Terms</h3><p>By using SUPER MART, you agree to these Terms and Conditions.</p>
+<h3>2. Products and Prices</h3><p>Product descriptions, prices and availability may change.</p>
+<h3>3. Orders</h3><p>Orders are subject to product availability and confirmation.</p>
+<h3>4. Payment</h3><p>Cash on Delivery is currently available.</p>
+<h3>5. Delivery</h3><p>Delivery times may vary by location.</p>
+<h3>6. Cancellation and Returns</h3><p>Cancellation, return and refund requests will be handled according to the applicable policy.</p>
+<h3>7. Contact Us</h3><p>nkmart.help@gmail.com</p>
+</div></div>
+
+<div class="modal-backdrop" id="authModal"><div class="modal">
+<div class="modal-head"><h2 id="authTitle">Sign In</h2><button class="close" onclick="closeModal('authModal')">✕</button></div>
+<div class="tabs">
+<button id="loginTab" class="active" onclick="setAuthMode('login')">Login</button>
+<button id="signupTab" onclick="setAuthMode('signup')">Create Account</button>
+</div>
+<form id="authForm">
+<div class="field" id="nameField"><label>Full name</label><input id="authName" autocomplete="name"></div>
+<div class="field"><label>Email</label><input id="authEmail" type="email" required></div>
+<div class="field"><label>Password</label><input id="authPassword" type="password" required minlength="6"></div>
+<button id="authSubmit" type="submit" style="width:100%">Login</button>
+</form>
+<p class="muted">Admin users can sign in with their assigned admin account.</p>
+</div></div>
+
+<div class="modal-backdrop" id="cartModal"><div class="modal">
+<div class="modal-head"><h2>Your Cart</h2><button class="close" onclick="closeModal('cartModal')">✕</button></div>
+<div id="cartItems"></div>
+<div class="total-row"><b>Total</b><b id="cartTotal">₹0</b></div>
+<button onclick="startCheckout()" style="width:100%;margin-top:12px">Proceed to Checkout</button>
+</div></div>
+
+<div class="modal-backdrop" id="checkoutModal"><div class="modal">
+<div class="modal-head"><h2>Checkout</h2><button class="close" onclick="closeModal('checkoutModal')">✕</button></div>
+<div class="notice">Currently available payment method: Cash on Delivery.</div>
+<form id="checkoutForm">
+<div class="field"><label>Full name</label><input id="customerName" required></div>
+<div class="field"><label>Phone number</label><input id="customerPhone" required inputmode="tel" pattern="[0-9+ -]{8,16}"></div>
+<div class="field"><label>Full address</label><textarea id="customerAddress" required></textarea></div>
+<div class="form-row">
+<div class="field"><label>City</label><input id="customerCity" required></div>
+<div class="field"><label>State</label><input id="customerState" required autocomplete="address-level1" placeholder="Enter state"></div>
+<div class="field"><label>PIN code</label><input id="customerPin" required inputmode="numeric" pattern="[0-9]{6}"></div>
+</div>
+<div class="field"><label>Coupon Code</label><div style="display:flex;gap:8px">
+<input id="couponInput" placeholder="Enter coupon code" oninput="appliedCoupon=null;updateCheckoutSummary();document.getElementById('couponMessage').textContent=''">
+<button type="button" id="applyCouponBtn" onclick="applyCoupon()">Apply</button>
+</div><small id="couponMessage"></small></div>
+<div class="total-row"><span>Subtotal</span><span id="checkoutSubtotal">₹0</span></div>
+<div class="total-row"><span>Discount</span><span id="checkoutDiscount">₹0</span></div>
+<div class="total-row"><b>Pay on delivery</b><b id="checkoutTotal">₹0</b></div>
+<button id="placeOrderBtn" type="submit" style="width:100%;margin-top:12px">Place Order (Cash on Delivery)</button>
+</form>
+</div></div>
+
+<div class="modal-backdrop" id="orderSuccessModal"><div class="modal">
+<div class="modal-head"><h2>Order placed successfully!</h2><button class="close" onclick="closeModal('orderSuccessModal')">✕</button></div>
+<p id="orderSuccessMessage">Thank you for shopping with SUPER MART.</p>
+<button class="secondary" style="width:100%;margin-top:10px" onclick="closeModal('orderSuccessModal');openOrders()">View My Orders</button>
+</div></div>
+
+<div class="modal-backdrop" id="returnPolicyModal"><div class="modal wide">
+<div class="modal-head"><h2>7-Day Return &amp; Refund Policy</h2><button class="close" onclick="closeModal('returnPolicyModal')">✕</button></div>
+<p>Eligible products may be requested for return within 7 days of delivery. The item should be unused, in its original packaging, and include its accessories and proof of purchase.</p>
+<h3>How to request a return</h3><p>Contact SUPER MART support with your order ID, product details and reason for return. Our team will review the request and confirm whether the item is eligible.</p>
+<h3>Refunds</h3><p>Approved refunds will be processed after the returned product is received and inspected. For Cash on Delivery orders, refund method and timing will be confirmed by our support team.</p>
+<h3>Exceptions</h3><p>Items marked non-returnable, damaged due to misuse, incomplete, or returned without original packaging may not qualify, subject to applicable consumer law.</p>
+<p>For help, contact SUPER MART at nkmart.help@gmail.com.</p>
+</div></div>
+
+<div class="modal-backdrop" id="ordersModal"><div class="modal wide">
+<div class="modal-head"><h2>My Orders</h2><button class="close" onclick="closeModal('ordersModal')">✕</button></div>
+<div id="ordersContent"></div>
+</div></div>
+
+<div class="modal-backdrop" id="profileModal"><div class="modal">
+<div class="modal-head"><h2>My Profile</h2><button class="close" onclick="closeModal('profileModal')">✕</button></div>
+<div id="profileContent"></div>
+</div></div>
+
+<div class="modal-backdrop" id="settingsModal"><div class="modal">
+<div class="modal-head"><h2>Settings</h2><button class="close" onclick="closeModal('settingsModal')">✕</button></div>
+<div class="field"><label for="languageSetting">Language</label><select id="languageSetting"><option value="en">English</option><option value="hi">Hindi</option></select></div>
+<p class="muted">Your preference is saved on this device.</p>
+<button onclick="saveSettings()">Save Settings</button>
+</div></div>
+
+<div class="modal-backdrop" id="detailModal"><div class="modal">
+<div class="modal-head"><h2>Product Details</h2><button class="close" onclick="closeModal('detailModal')">✕</button></div>
+<div id="detailContent"></div>
+</div></div>
+
+<!-- CUSTOMER SUPPORT TICKETS -->
+<div class="modal-backdrop" id="supportModal"><div class="modal wide">
+<div class="modal-head"><h2>🎧 SUPER MART Customer Support</h2><button class="close" onclick="closeModal('supportModal')">✕</button></div>
+
+<div id="supportCreateBox">
+<h3>Create New Ticket</h3>
+<form id="supportCreateForm" onsubmit="createSupportTicket(event)">
+<div class="field"><label>Subject</label><input id="supportSubject" required maxlength="120" placeholder="Your issue"></div>
+<div class="field"><label>Category</label>
+<select id="supportCategory">
+<option>Order Issue</option><option>Payment Issue</option><option>Product Issue</option><option>Delivery Issue</option><option>Return / Refund</option><option>Other</option>
+</select></div>
+<div class="field"><label>Message</label><textarea id="supportFirstMessage" required maxlength="3000" placeholder="Explain your problem"></textarea></div>
+<button type="submit" id="createTicketBtn">Create Ticket</button>
+</form>
+</div>
+
+<hr>
+<div id="customerTicketArea">
+<h3>My Support Tickets</h3>
+<div id="customerTicketList">Loading...</div>
+</div>
+
+<div id="customerChatBox" class="hidden">
+<button class="secondary" onclick="backToTickets()">← Back to Tickets</button>
+<h3 id="customerChatTitle">Conversation</h3>
+<div id="customerMessages" class="support-chat"></div>
+<form class="support-compose" onsubmit="sendCustomerSupportMessage(event)">
+<textarea id="customerReply" required maxlength="3000" placeholder="Write your reply..."></textarea>
+<button type="submit" id="customerReplyBtn">Send</button>
+</form>
+</div>
+</div></div>
+
+<!-- ADMIN DASHBOARD -->
+<div class="modal-backdrop" id="adminModal">
+<div class="modal wide">
+<div class="modal-head">
+<h2>SUPER MART | Admin Control Center</h2>
+<div style="display:flex;gap:7px">
+<button class="close" onclick="adminRefresh()">↻</button>
+<button class="close" onclick="signOut()">Logout</button>
+<button class="close" onclick="closeModal('adminModal')">✕</button>
+</div>
+</div>
+
+<div class="admin-layout">
+<aside class="admin-sidebar">
+<div class="admin-brand">SUPER <span>MART</span></div>
+<div class="admin-menu">
+<button class="active" onclick="showAdminTab('adminOverview',this)">▦ Overview</button>
+<button onclick="showAdminTab('adminOrders',this)">▤ Orders</button>
+<button onclick="showAdminTab('adminProducts',this)">▣ Products</button>
+<button onclick="showAdminTab('adminCategories',this)">▧ Categories</button>
+<button onclick="showAdminTab('adminCustomers',this)">♙ Customers</button>
+<button onclick="showAdminTab('adminCoupons',this)">％ Coupons</button>
+<button onclick="showAdminTab('adminReports',this)">▥ Reports</button>
+<button onclick="showAdminTab('adminSupport',this)">🎧 Customer Support</button>
+<button onclick="showAdminTab('adminSettings',this)">⚙ Settings</button>
+</div>
+</aside>
+
+<main class="admin-main">
+<section id="adminOverview">
+<div class="admin-welcome">
+<div><h2>Dashboard Overview</h2><div class="muted">Welcome to SUPER MART administration</div></div>
+<button onclick="adminRefresh()">↻ Refresh Data</button>
+</div>
+<div class="admin-cards">
+<div class="admin-card"><div class="admin-icon">💰</div><small>Total Sales</small><strong id="statSales">₹0</strong></div>
+<div class="admin-card"><div class="admin-icon">📈</div><small>Net Profit</small><strong id="statProfit">₹0</strong></div>
+<div class="admin-card"><div class="admin-icon">🛒</div><small>Total Orders</small><strong id="statOrders">0</strong></div>
+<div class="admin-card"><div class="admin-icon">⚠️</div><small>Low Stock Alert (≤5)</small><strong id="statLowStock">0</strong></div>
+</div>
+<div class="admin-content">
+<h3>Quick Actions</h3>
+<div class="admin-shortcuts">
+<button onclick="showAdminTab('adminProducts',this)">＋ Add / Manage Products</button>
+<button onclick="showAdminTab('adminOrders',this)">Manage Orders</button>
+<button onclick="showAdminTab('adminCustomers',this)">View Customers</button>
+<button onclick="showAdminTab('adminCategories',this)">Manage Categories</button>
+<button onclick="showAdminTab('adminCoupons',this)">Manage Coupons</button>
+<button onclick="showAdminTab('adminReports',this)">Sales Reports</button>
+</div>
+</div>
+<div class="admin-content">
+<div class="admin-toolbar"><h3>Recent Orders</h3><button onclick="showAdminTab('adminOrders',document.querySelectorAll('.admin-menu button')[1])">View All</button></div>
+<div id="adminRecentOrders" class="table-wrap"></div>
+</div>
+</section>
+
+<section id="adminProducts" class="hidden">
+<div class="admin-content">
+<h3>Product Management</h3>
+<form id="productForm">
+<input type="hidden" id="editProductId">
+<div class="form-row">
+<div class="field"><label>Product name</label><input id="pName" required></div>
+<div class="field"><label>Category</label><input id="pCategory" required list="categoryOptions"><datalist id="categoryOptions"></datalist></div>
+</div>
+<div class="form-row">
+<div class="field"><label>Price (₹)</label><input id="pPrice" type="number" min="0" step="0.01" required></div>
+<div class="field"><label>Old price (₹)</label><input id="pOldPrice" type="number" min="0" step="0.01"></div>
+</div>
+<div class="form-row">
+<div class="field"><label>Stock</label><input id="pStock" type="number" min="0" value="10" required></div>
+<div class="field"><label>Cost Price (₹)</label><input id="pCostPrice" type="number" min="0" step="0.01" value="0" required></div>
+</div>
+<div class="field"><label>Emoji</label><input id="pEmoji" placeholder="🛍️"></div>
+<div class="field"><label>Image URL</label><input id="pImage" type="url"></div>
+<div class="field"><label>Description</label><textarea id="pDescription"></textarea></div>
+<button type="submit" id="saveProductBtn">Add Product</button>
+<button type="button" class="secondary" onclick="resetProductForm()">Clear</button>
+</form>
+</div>
+<div class="admin-content"><h3>All Products</h3><div id="adminProductList" class="table-wrap"></div></div>
+</section>
+
+<section id="adminCategories" class="hidden">
+<div class="admin-content">
+<h3>Category Management</h3>
+<div class="field"><label>New category name</label><input id="categoryName"></div>
+<button onclick="addCategory()">＋ Add Category</button>
+<div id="adminCategoryList" class="table-wrap" style="margin-top:15px"></div>
+</div>
+</section>
+
+<section id="adminOrders" class="hidden">
+<div class="admin-content">
+<div class="admin-toolbar">
+<h3>Order Management</h3>
+<button onclick="loadAdminOrders()">↻ Refresh</button>
+</div>
+<div class="admin-toolbar">
+<input id="adminOrderSearch" type="search" placeholder="Search order ID, name, phone, city, PIN..." oninput="renderAdminOrders()" style="flex:1;min-width:220px">
+<select id="adminOrderStatusFilter" onchange="renderAdminOrders()">
+<option value="all">All statuses</option>
+<option>Pending</option><option>Processing</option><option>Shipped</option>
+<option>Out for Delivery</option><option>Delivered</option><option>Cancelled</option>
+</select>
+</div>
+<div id="adminOrderList" class="table-wrap"></div>
+</div>
+</section>
+
+<section id="adminCustomers" class="hidden">
+<div class="admin-content"><h3>Customer Management</h3><div id="adminCustomerList" class="table-wrap"></div></div>
+</section>
+
+<section id="adminCoupons" class="hidden">
+<div class="admin-content">
+<h3>Coupon Management</h3>
+<div class="notice">Discount amount is in rupees.</div>
+<div class="form-row">
+<div class="field"><label>Coupon code</label><input id="couponCodeAdmin"></div>
+<div class="field"><label>Discount (₹)</label><input id="couponDiscountAdmin" type="number" min="1"></div>
+</div>
+<button onclick="addCoupon()">＋ Add Coupon</button>
+<div id="adminCouponList" class="table-wrap" style="margin-top:15px"></div>
+</div>
+</section>
+
+<section id="adminReports" class="hidden">
+<div class="admin-content"><h3>Sales Reports</h3><p class="muted">Order values and order status summary.</p><div id="adminReportContent"></div></div>
+</section>
+
+<!-- ADMIN SUPPORT TICKETS -->
+<section id="adminSupport" class="hidden">
+<div class="admin-content">
+<div class="admin-toolbar">
+<div><h3>🎧 Customer Support Tickets</h3><p class="muted">Customer messages and support replies</p></div>
+<button onclick="loadAdminSupportTickets()">↻ Refresh</button>
+</div>
+<div class="support-admin-grid">
+<div>
+<h3>All Tickets</h3>
+<div id="adminSupportTicketList" class="support-list">Loading tickets...</div>
+</div>
+<div>
+<div class="support-chat-head">
+<h3 id="adminSupportChatTitle">Select a ticket</h3>
+<select id="adminSupportStatus" onchange="updateSupportStatus()" disabled>
+<option>Pending</option>
+<option>In Progress</option>
+<option>Resolved</option>
+</select>
+</div>
+<div id="adminSupportMessages" class="support-chat">Choose a customer ticket to view messages.</div>
+<form class="support-compose" onsubmit="sendAdminSupportMessage(event)">
+<textarea id="adminSupportReply" maxlength="3000" required placeholder="Reply to customer..." disabled></textarea>
+<button id="adminSupportSendBtn" type="submit" disabled>Send</button>
+</form>
+</div>
+</div>
+</div>
+</section>
+
+<section id="adminSettings" class="hidden">
+<div class="admin-content">
+<h3>Store Settings</h3>
+<p><b>Store:</b> SUPER MART</p>
+<p><b>Support:</b> nkmart.help@gmail.com</p>
+<p><b>Payment:</b> Cash on Delivery</p>
+<p class="muted">Database and authentication are managed through Supabase.</p>
+<button class="danger" onclick="signOut()">Admin Logout</button>
+</div>
+</section>
+
+</main>
+</div>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const SUPABASE_URL='https://kmyrqipubmwzvjokwmli.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_K5g61U2Pr9iPyIxbcmyEvw_Dvysu-4O';
+const ADMIN_LOGIN_EMAIL='nk9777818@gmail.com';
+const ADMIN_USERNAME='admin';
+
+const $=id=>document.getElementById(id);
+
+// Fail clearly if the Supabase SDK or public project configuration is unavailable.
+if(!window.supabase || typeof window.supabase.createClient!=='function'){
+  $('productGrid').innerHTML='<div class="empty">Supabase SDK load nahi hua. Internet connection check karke page reload karein.</div>';
+  throw new Error('Supabase JavaScript SDK is unavailable');
+}
+if(!/^https:\/\/[^/]+\.supabase\.co$/.test(SUPABASE_URL)||!SUPABASE_ANON_KEY){
+  $('productGrid').innerHTML='<div class="empty">Supabase configuration missing hai. Website administrator se contact karein.</div>';
+  throw new Error('Invalid Supabase project configuration');
+}
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const adminRoute=window.location.pathname.replace(/\/+$/,'')==='/admin';
+
+let products=[],categories=[];
+let cart=JSON.parse(localStorage.getItem('nkmart_cart')||'[]');
+let currentUser=null,currentProfile=null;
+let authMode='login',toastTimer,appliedCoupon=null;
+let authGeneration=0,ordersGeneration=0,profileGeneration=0;
+let customerSelectedTicket=null,adminSelectedTicket=null;
+
+if(adminRoute)document.body.classList.add('admin-route');
+
+const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+
+function notify(message){
+const t=$('toast');
+t.textContent=message;
+t.classList.add('show');
+clearTimeout(toastTimer);
+toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+function openModal(id){$(id).classList.add('show')}
+function closeModal(id){$(id).classList.remove('show')}
+
+function escapeHtml(s){
+return String(s??'').replace(/[&<>"']/g,c=>({
+'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+}
+
+/* AUTH SESSION */
+async function getFreshUser(){
+const {data,error}=await db.auth.getSession();
+if(error)throw error;
+const user=data?.session?.user||null;
+if((currentUser?.id||null)!==(user?.id||null)){
+authGeneration++;
+ordersGeneration++;
+profileGeneration++;
+currentUser=user;
+currentProfile=null;
+}
+return user;
+}
+
+async function loadProfile(userId){
+const requestedId=userId||currentUser?.id;
+if(!requestedId){currentProfile=null;return null}
+const requestGeneration=++profileGeneration;
+const {data,error}=await db.from('profiles').select('*').eq('id',requestedId).maybeSingle();
+if(error)console.warn('Profile load:',error.message);
+if(requestGeneration!==profileGeneration||currentUser?.id!==requestedId)return null;
+currentProfile=data||null;
+return currentProfile;
+}
+
+function updateAccountButton(){
+const b=$('accountButton');
+if(b)b.textContent=currentUser?(currentProfile?.name||currentUser.email||'My Account'):'Account / Login';
+}
+
+async function openProfile(){
+const user=await getFreshUser();
+if(!user){notify('Please login to view your profile');openAuth();return;}
+if(!currentProfile||currentProfile.id!==user.id)await loadProfile(user.id);
+const profile=currentProfile||{};
+$('profileContent').innerHTML=`
+<div class="field"><label>Name</label><div>${escapeHtml(profile.name||user.user_metadata?.name||'Not added')}</div></div>
+<div class="field"><label>Email</label><div>${escapeHtml(user.email||'')}</div></div>
+<div class="field"><label>Account type</label><div>${profile.role==='admin'?'Admin':'Customer'}</div></div>
+<div class="field"><label>Member since</label><div>${user.created_at?new Date(user.created_at).toLocaleDateString('en-IN'):'—'}</div></div>`;
+openModal('profileModal');
+}
+
+function openSettings(){
+$('languageSetting').value=localStorage.getItem('nkmart_language')||'en';
+openModal('settingsModal');
+}
+function saveSettings(){
+localStorage.setItem('nkmart_language',$('languageSetting').value);
+closeModal('settingsModal');
+notify('Settings saved');
+}
+
+/* ADMIN LOGIN */
+function showAdminLogin(message=''){
+if(!adminRoute)return;
+$('adminLoginPage').classList.remove('hidden');
+$('adminLoginMessage').textContent=message;
+$('adminLoginButton').disabled=false;
+$('adminLoginButton').textContent='Login to Dashboard';
+}
+
+async function adminLogin(event){
+event.preventDefault();
+const username=$('adminUsername').value.trim();
+const password=$('adminPassword').value;
+const message=$('adminLoginMessage');
+const button=$('adminLoginButton');
+message.textContent='';
+
+if(username!==ADMIN_USERNAME){
+message.textContent='Invalid admin username.';
+return;
+}
+if(!ADMIN_LOGIN_EMAIL){
+message.textContent='Admin email is not configured.';
+return;
+}
+
+button.disabled=true;
+button.textContent='Verifying...';
+
+try{
+const {error}=await db.auth.signInWithPassword({email:ADMIN_LOGIN_EMAIL,password});
+if(error)throw error;
+
+const user=await getFreshUser();
+if(!user)throw new Error('Login session nahi mila.');
+
+await loadProfile(user.id);
+if(currentProfile?.role!=='admin'){
+await db.auth.signOut();
+currentUser=null;
+currentProfile=null;
+throw new Error('Access denied. Ye account Admin nahi hai.');
+}
+
+$('adminPassword').value='';
+$('adminLoginPage').classList.add('hidden');
+await openAdmin();
+
+}catch(error){
+showAdminLogin(error.message||'Admin login failed.');
+$('adminPassword').value='';
+}finally{
+button.disabled=false;
+button.textContent='Login to Dashboard';
+}
+}
+$('adminLoginForm').addEventListener('submit',adminLogin);
+
+/* AI SUPPORT */
+function toggleAIChat(){
+$('aiChatBox').classList.toggle('open');
+if($('aiChatBox').classList.contains('open'))$('aiChatInput').focus();
+}
+function addAIMessage(message,type){
+const div=document.createElement('div');
+div.className='aiMessage '+(type==='user'?'aiUser':'aiBot');
+div.textContent=message;
+$('aiChatMessages').appendChild(div);
+$('aiChatMessages').scrollTop=$('aiChatMessages').scrollHeight;
+}
+function quickAIMessage(message){
+$('aiChatInput').value=message;
+$('aiChatInput').form.requestSubmit();
+}
+function getNKReply(message){
+const m=message.toLowerCase();
+if(/hello|hi|hey|namaste|नमस्ते/.test(m))return 'Hello! Welcome to SUPER MART 😊 Aapko kis cheez mein help chahiye?';
+if(/order|track|tracking|ऑर्डर/.test(m))return currentUser?'Apna order status dekhne ke liye My Orders section kholiye.':'Order tracking ke liye pehle login karein, phir My Orders kholein.';
+if(/deliver|shipping|kab tak|डिलीवरी/.test(m))return 'Delivery time aapke location aur product availability par depend karta hai.';
+if(/return|refund|cancel|वापस|रिफंड|कैंसल/.test(m))return 'Return, refund ya cancellation ke liye Customer Support Ticket banayein.';
+if(/payment|cash|cod|पैमेंट/.test(m))return 'Abhi SUPER MART par Cash on Delivery available hai.';
+if(/product|price|stock|item|प्रोडक्ट/.test(m))return 'Product ka naam search box mein likhein.';
+if(/contact|support|help|agent/.test(m))return 'Contact Us par click karke Customer Support Ticket banayein.';
+if(/thank|thanks/.test(m))return 'You are welcome! 😊 SUPER MART par shopping ke liye thank you.';
+return 'Maaf kijiye, main is sawal ko abhi samajh nahi paaya. Aap Order Tracking, Delivery, Return, Payment ya Products ke baare mein pooch sakte hain.';
+}
+function sendAIMessage(event){
+event.preventDefault();
+const input=$('aiChatInput');
+const message=input.value.trim();
+if(!message)return;
+addAIMessage(message,'user');
+input.value='';
+setTimeout(()=>addAIMessage(getNKReply(message),'bot'),400);
+}
+
+/* CART */
+function saveCart(){
+localStorage.setItem('nkmart_cart',JSON.stringify(cart));
+renderCart();
+}
+function setCategory(value){
+$('categoryFilter').value=value;
+renderProducts();
+$('productsSection').scrollIntoView({behavior:'smooth'});
+}
+async function loadSession(){
+try{
+const user=await getFreshUser();
+if(user)await loadProfile(user.id);
+updateAccountButton();
+}catch(error){
+console.error(error);
+currentUser=null;
+currentProfile=null;
+updateAccountButton();
+}
+}
+async function loadProducts(){
+$('productGrid').innerHTML='<div class="empty">Connecting to SUPER MART...</div>';
+try{
+const {data,error}=await db.from('products').select('*').eq('active',true).order('created_at',{ascending:false});
+if(error)throw error;
+products=data||[];
+console.info('SUPER MART Supabase connection successful. Products:',products.length);
+renderProducts();
+}catch(error){
+console.error('SUPER MART Supabase connection failed:',error);
+$('productGrid').innerHTML='<div class="empty">Supabase se connection nahi ho paya: '+escapeHtml(error.message||'Unknown error')+'. Project URL, publishable key aur Products table ki public SELECT policy check karein.</div>';
+}
+}
+async function loadCategories(){
+const {data,error}=await db.from('categories').select('*').order('name');
+if(error)return;
+categories=data||[];
+const sel=$('categoryFilter');
+const old=sel.value;
+sel.innerHTML='<option value="all">All categories</option>'+categories.map(c=>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+sel.value=categories.some(c=>c.name===old)?old:'all';
+$('categoryOptions').innerHTML=categories.map(c=>`<option value="${escapeHtml(c.name)}">`).join('');
+}
+function renderProducts(){
+const q=$('searchInput').value.trim().toLowerCase();
+const cat=$('categoryFilter').value;
+const sort=$('sortFilter').value;
+let list=products.filter(p=>(cat==='all'||p.category===cat)&&(!q||[p.name,p.category,p.description].join(' ').toLowerCase().includes(q)));
+if(sort==='low')list.sort((a,b)=>a.price-b.price);
+if(sort==='high')list.sort((a,b)=>b.price-a.price);
+if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));
+
+$('productGrid').innerHTML=list.length?list.map(p=>`
+<article class="product">
+<div class="pic" onclick="showProduct(${p.id})">
+${p.image_url?`<img src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none';this.parentElement.textContent='🛍️'">`:escapeHtml(p.emoji||'🛍️')}
+</div>
+<div class="muted">${escapeHtml(p.category||'General')}</div>
+<h3>${escapeHtml(p.name)}</h3>
+<div class="price">${money(p.price)} ${p.old_price?`<span class="old">${money(p.old_price)}</span>`:''}</div>
+<div class="muted">${Number(p.stock)>0?'In stock':'Out of stock'}</div>
+<div class="actions">
+<button ${Number(p.stock)<=0?'disabled':''} onclick="addToCart(${p.id})">Add to Cart</button>
+<button class="secondary" onclick="showProduct(${p.id})">Details</button>
+</div></article>`).join(''):'<div class="empty">No products found.</div>';
+}
+function addToCart(id){
+    const p=products.find(x=>x.id===id);
+    if(!p)return;
+
+    const stock=Number(p.stock)||0;
+
+    if(stock<=0){
+        notify('Out of stock');
+        return;
+    }
+
+    const item=cart.find(x=>x.id===id);
+
+    if(item){
+        if(item.qty>=stock){
+            notify('Available stock: '+stock);
+            return;
+        }
+        item.qty++;
+    }else{
+        cart.push({
+            id:p.id,
+            name:p.name,
+            price:Number(p.price),
+            qty:1,
+            emoji:p.emoji||'🛍️'
+        });
+    }
+
+    saveCart();
+    notify('Added to cart');
+}
+  
+function changeQty(id,delta){
+    const item=cart.find(x=>x.id===id);
+    if(!item)return;
+
+    const product=products.find(p=>p.id===id);
+    if(!product)return;
+
+    const newQty=item.qty+delta;
+
+    if(newQty>Number(product.stock)){
+        notify('Available stock: '+product.stock);
+        return;
+    }
+
+    if(newQty<=0){
+        cart=cart.filter(x=>x.id!==id);
+    }else{
+        item.qty=newQty;
+    }
+
+    saveCart();
+}
+function renderCart(){
+$('cartCount').textContent=cart.reduce((s,x)=>s+x.qty,0);
+$('cartItems').innerHTML=cart.length?cart.map(x=>`
+<div class="cart-line">
+<div><b>${escapeHtml(x.name)}</b><div class="muted">${money(x.price)} each</div></div>
+<div class="qty"><button class="secondary" onclick="changeQty(${x.id},-1)">−</button>${x.qty}<button class="secondary" onclick="changeQty(${x.id},1)">+</button></div>
+<b class="line-total">${money(x.price*x.qty)}</b>
+</div>`).join(''):'<div class="empty">Your cart is empty.</div>';
+$('cartTotal').textContent=money(cart.reduce((s,x)=>s+x.price*x.qty,0));
+}
+function openCart(){renderCart();openModal('cartModal')}
+function showProduct(id){
+const p=products.find(x=>x.id===id);
+if(!p)return;
+$('detailContent').innerHTML=`
+<div style="text-align:center;font-size:75px">
+${p.image_url?`<img src="${escapeHtml(p.image_url)}" style="max-width:100%;height:190px;object-fit:contain">`:escapeHtml(p.emoji||'🛍️')}
+</div>
+<h3>${escapeHtml(p.name)}</h3><p class="muted">${escapeHtml(p.category||'')}</p>
+<h2>${money(p.price)}</h2><p>${escapeHtml(p.description||'')}</p>
+<p class="muted">Stock: ${Number(p.stock)||0}</p>
+<button onclick="addToCart(${p.id});closeModal('detailModal')" ${Number(p.stock)<=0?'disabled':''}>Add to Cart</button>`;
+openModal('detailModal');
+}
+/* CUSTOMER AUTH */
+function openAuth(){setAuthMode('login');openModal('authModal')}
+function setAuthMode(mode){
+authMode=mode;
+$('authTitle').textContent=mode==='login'?'Sign In':'Create Account';
+$('authSubmit').textContent=mode==='login'?'Login':'Create Account';
+$('nameField').classList.toggle('hidden',mode==='login');
+$('authName').required=mode==='signup';
+$('loginTab').classList.toggle('active',mode==='login');
+$('signupTab').classList.toggle('active',mode==='signup');
+}
+$('authForm').addEventListener('submit',async e=>{
+e.preventDefault();
+const email=$('authEmail').value.trim();
+const password=$('authPassword').value;
+const name=$('authName').value.trim();
+const btn=$('authSubmit');
+btn.disabled=true;
+try{
+if(authMode==='signup'){
+const {data,error}=await db.auth.signUp({email,password,options:{data:{name}}});
+if(error)throw error;
+if(data.user&&!data.session)notify('Account created. Email confirmation may be required.');
+else notify('Account created successfully');
+}else{
+const {error}=await db.auth.signInWithPassword({email,password});
+if(error)throw error;
+notify('Login successful');
+}
+const user=await getFreshUser();
+if(user){
+await loadProfile(user.id);
+closeModal('authModal');
+updateAccountButton();
+if(currentProfile?.role==='admin')openAdmin();
+}
+}catch(err){notify(err.message||'Authentication failed');}
+finally{btn.disabled=false;}
+});
+
+async function signOut(){
+try{
+await db.auth.signOut();
+currentUser=null;currentProfile=null;
+authGeneration++;profileGeneration++;ordersGeneration++;
+closeModal('ordersModal');closeModal('adminModal');closeModal('supportModal');closeModal('profileModal');closeModal('settingsModal');
+updateAccountButton();
+if(adminRoute){
+showAdminLogin('You have been logged out.');
+$('adminPassword').value='';
+}
+notify('Signed out');
+}catch(error){notify(error.message||'Sign out failed');}
+}
+
+/* CHECKOUT */
+async function startCheckout(){
+const user=await getFreshUser();
+if(!cart.length){notify('Your cart is empty');return;}
+if(!user){
+closeModal('cartModal');openAuth();
+notify('Please sign in before checkout');return;
+}
+await loadProfile(user.id);
+appliedCoupon=null;
+$('couponInput').value='';
+$('couponMessage').textContent='';
+$('customerName').value=currentProfile?.name||user.user_metadata?.name||'';
+updateCheckoutSummary();
+closeModal('cartModal');
+openModal('checkoutModal');
+}
+function updateCheckoutSummary(){
+const subtotal=cart.reduce((s,x)=>s+x.price*x.qty,0);
+const discount=appliedCoupon?Math.min(Number(appliedCoupon.discount),subtotal):0;
+$('checkoutSubtotal').textContent=money(subtotal);
+$('checkoutDiscount').textContent=money(discount);
+$('checkoutTotal').textContent=money(subtotal-discount);
+}
+async function applyCoupon(){
+const code=$('couponInput').value.trim().toUpperCase();
+const msg=$('couponMessage');
+if(!code){msg.textContent='Enter coupon code';return;}
+const btn=$('applyCouponBtn');
+btn.disabled=true;btn.textContent='Checking...';
+try{
+const {data,error}=await db.from('coupons').select('code,discount,active').ilike('code',code).eq('active',true).maybeSingle();
+if(error)throw error;
+if(!data)throw new Error('Invalid or inactive coupon');
+if(Number(data.discount)<=0)throw new Error('Invalid discount');
+appliedCoupon=data;
+msg.textContent='Coupon applied! You save '+money(data.discount);
+msg.style.color='green';
+updateCheckoutSummary();
+}catch(err){
+appliedCoupon=null;msg.textContent=err.message;msg.style.color='red';updateCheckoutSummary();
+}finally{btn.disabled=false;btn.textContent='Apply';}
+}
+$('checkoutForm').addEventListener('submit',async e=>{
+e.preventDefault();
+const btn=$('placeOrderBtn');
+btn.disabled=true;btn.textContent='Placing order...';
+try{
+const user=await getFreshUser();
+if(!user||!cart.length)throw new Error('Please sign in and add products first');
+const items=cart.map(x=>({product_id:x.id,quantity:x.qty}));
+const address={
+name:$('customerName').value.trim(),
+phone:$('customerPhone').value.trim(),
+address:$('customerAddress').value.trim(),
+city:$('customerCity').value.trim(),
+state:$('customerState').value.trim(),
+pin:$('customerPin').value.trim()
+};
+const {data,error}=await db.rpc('place_order',{
+p_items:items,p_address:address,
+p_payment_method:'Cash on Delivery',
+p_coupon_code:appliedCoupon?.code||null
+});
+if(error)throw error;
+cart=[];appliedCoupon=null;saveCart();
+const newOrderId=data?.order_id??data?.id??'—';
+closeModal('checkoutModal');$('checkoutForm').reset();
+$('orderSuccessMessage').textContent='Your SUPER MART order ID is #'+newOrderId+'. Thank you for your order.';
+openModal('orderSuccessModal');
+await loadProducts();
+}catch(err){notify('Order failed: '+(err.message||'Please try again'));}
+finally{btn.disabled=false;btn.textContent='Place Order (Cash on Delivery)';}
+});
+
+/* CUSTOMER ORDERS */
+async function openOrders(){
+try{
+const user=await getFreshUser();
+if(!user){openAuth();notify('Please login to view your orders');return;}
+const requestId=++ordersGeneration;
+$('ordersContent').innerHTML='<div class="empty">Loading your orders...</div>';
+openModal('ordersModal');
+const {data,error}=await db.from('orders').select('*,order_items(*)').eq('user_id',user.id).order('created_at',{ascending:false});
+if(requestId!==ordersGeneration||currentUser?.id!==user.id)return;
+if(error)throw error;
+if(!data||!data.length){$('ordersContent').innerHTML='<div class="empty">Is account par abhi koi order nahi hai.</div>';return;}
+$('ordersContent').innerHTML=data.map(order=>{
+const items=order.order_items||[];
+return `<div class="panel">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+<div><b>Order #${escapeHtml(order.id)}</b><div class="muted">${new Date(order.created_at).toLocaleString('en-IN')}</div></div>
+<span class="status">${escapeHtml(order.status||'Pending')}</span>
+</div>
+<div style="margin-top:12px">${items.map(item=>`<div class="total-row"><span>${escapeHtml(item.product_name||item.name||'Product')} × ${Number(item.quantity||1)}</span><b>${money(item.price*Number(item.quantity||1))}</b></div>`).join('')}</div>
+<div class="total-row"><b>Total</b><b>${money(order.total_amount||order.total||0)}</b></div>
+${order.tracking_note?`<p class="muted">Tracking update: ${escapeHtml(order.tracking_note)}</p>`:''}
+${['Pending','Processing'].includes(order.status)?`<button class="danger" onclick="cancelMyOrder(${Number(order.id)})">Cancel Order</button>`:''}
+</div>`;
+}).join('');
+}catch(error){
+$('ordersContent').innerHTML=`<div class="empty">Orders load nahi hue.<br>${escapeHtml(error.message||'Please try again.')}</div>`;
+}
+}
+async function cancelMyOrder(orderId){
+try{
+const user=await getFreshUser();
+if(!user){notify('Please login first');return;}
+if(!confirm('Kya aap ye order cancel karna chahte hain?'))return;
+const {data:ownedOrder,error:checkError}=await db.from('orders').select('id').eq('id',orderId).eq('user_id',user.id).maybeSingle();
+if(checkError)throw checkError;
+if(!ownedOrder)throw new Error('Ye order is account ka nahi hai.');
+const {data,error}=await db.rpc('cancel_my_order',{p_order_id:orderId});
+if(error)throw error;
+if(!data?.success)throw new Error(data?.message||'Order cancellation failed');
+notify('Order cancelled successfully');await openOrders();
+}catch(error){notify(error.message||'Unable to cancel order');}
+}
+
+/* CUSTOMER SUPPORT TICKETS */
+async function openSupport(){
+try{
+const user=await getFreshUser();
+if(!user){
+closeModal('supportModal');
+openAuth();
+notify('Support ticket banane ke liye login karein');
+return;
+}
+customerSelectedTicket=null;
+$('supportCreateBox').classList.remove('hidden');
+$('customerTicketArea').classList.remove('hidden');
+$('customerChatBox').classList.add('hidden');
+$('supportCreateForm').reset();
+openModal('supportModal');
+await loadCustomerTickets();
+}catch(error){notify(error.message||'Support open nahi hua');}
+}
+
+function supportStatusClass(status){
+if(status==='Resolved')return 'resolved';
+if(status==='In Progress')return 'inprogress';
+return '';
+}
+
+async function loadCustomerTickets(){
+const user=await getFreshUser();
+if(!user)return;
+$('customerTicketList').innerHTML='<div class="muted">Loading tickets...</div>';
+const {data,error}=await db.from('support_tickets').select('*').eq('user_id',user.id).order('created_at',{ascending:false});
+if(error){
+$('customerTicketList').textContent='Tickets load nahi hue: '+error.message;
+return;
+}
+if(!data?.length){
+$('customerTicketList').innerHTML='<div class="empty">Abhi koi ticket nahi hai. Upar form se naya ticket banayein.</div>';
+return;
+}
+$('customerTicketList').innerHTML=data.map(t=>`
+<div class="support-ticket" onclick="openCustomerTicket(${Number(t.id)})">
+<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+<b>#${Number(t.id)} — ${escapeHtml(t.subject)}</b>
+<span class="support-status ${supportStatusClass(t.status)}">${escapeHtml(t.status)}</span>
+</div>
+<div class="muted">${escapeHtml(t.category||'General')} · ${new Date(t.created_at).toLocaleString('en-IN')}</div>
+</div>`).join('');
+}
+
+async function createSupportTicket(event){
+event.preventDefault();
+const user=await getFreshUser();
+if(!user){notify('Please login first');return;}
+const subject=$('supportSubject').value.trim();
+const category=$('supportCategory').value;
+const message=$('supportFirstMessage').value.trim();
+if(!subject||!message)return;
+const btn=$('createTicketBtn');
+btn.disabled=true;btn.textContent='Creating...';
+try{
+const {data:ticket,error}=await db.from('support_tickets').insert({
+user_id:user.id,subject,category,status:'Pending'
+}).select().single();
+if(error)throw error;
+const {error:messageError}=await db.from('support_messages').insert({
+ticket_id:ticket.id,user_id:user.id,sender_role:'customer',message
+});
+if(messageError)throw messageError;
+$('supportCreateForm').reset();
+notify('Support ticket created!');
+await loadCustomerTickets();
+await openCustomerTicket(ticket.id);
+}catch(error){
+notify('Ticket create failed: '+error.message);
+}finally{
+btn.disabled=false;btn.textContent='Create Ticket';
+}
+}
+
+async function openCustomerTicket(ticketId){
+const user=await getFreshUser();
+if(!user)return;
+const {data:ticket,error}=await db.from('support_tickets').select('*').eq('id',ticketId).eq('user_id',user.id).maybeSingle();
+if(error||!ticket){notify('Ticket nahi mila');return;}
+customerSelectedTicket=ticket.id;
+$('supportCreateBox').classList.add('hidden');
+$('customerTicketArea').classList.add('hidden');
+$('customerChatBox').classList.remove('hidden');
+$('customerChatTitle').textContent='#'+ticket.id+' — '+ticket.subject+' ('+ticket.status+')';
+await loadCustomerMessages(ticket.id);
+}
+
+async function loadCustomerMessages(ticketId){
+const user=await getFreshUser();
+if(!user||customerSelectedTicket!==ticketId)return;
+const {data:ticket}=await db.from('support_tickets').select('id').eq('id',ticketId).eq('user_id',user.id).maybeSingle();
+if(!ticket)return;
+const {data,error}=await db.from('support_messages').select('*').eq('ticket_id',ticketId).order('created_at',{ascending:true});
+if(error){$('customerMessages').textContent=error.message;return;}
+$('customerMessages').innerHTML=(data||[]).map(m=>`
+<div class="support-msg ${m.sender_role==='admin'?'support-admin':'support-customer'}">
+<b>${m.sender_role==='admin'?'SUPER MART Support':'You'}</b>
+<div>${escapeHtml(m.message)}</div>
+<div class="support-meta">${new Date(m.created_at).toLocaleString('en-IN')}</div>
+</div>`).join('')||'<div class="muted">No messages yet.</div>';
+$('customerMessages').scrollTop=$('customerMessages').scrollHeight;
+}
+
+async function sendCustomerSupportMessage(event){
+event.preventDefault();
+const user=await getFreshUser();
+const ticketId=customerSelectedTicket;
+const message=$('customerReply').value.trim();
+if(!user||!ticketId||!message)return;
+const btn=$('customerReplyBtn');
+btn.disabled=true;
+try{
+const {data:ticket,error:ticketError}=await db.from('support_tickets').select('id').eq('id',ticketId).eq('user_id',user.id).maybeSingle();
+if(ticketError)throw ticketError;
+if(!ticket)throw new Error('Ticket access denied');
+const {error}=await db.from('support_messages').insert({
+ticket_id:ticketId,user_id:user.id,sender_role:'customer',message
+});
+if(error)throw error;
+$('customerReply').value='';
+await loadCustomerMessages(ticketId);
+notify('Message sent');
+}catch(error){notify(error.message||'Message send nahi hua');}
+finally{btn.disabled=false;}
+}
+
+function backToTickets(){
+customerSelectedTicket=null;
+$('customerChatBox').classList.add('hidden');
+$('supportCreateBox').classList.remove('hidden');
+$('customerTicketArea').classList.remove('hidden');
+loadCustomerTickets();
+}
+
+/* ADMIN SECURITY */
+async function requireAdmin(){
+const user=await getFreshUser();
+if(!user){
+notify('Admin login required');
+if(adminRoute)showAdminLogin('Please login as admin.');
+else openAuth();
+return false;
+}
+if(!currentProfile||currentProfile.id!==user.id)await loadProfile(user.id);
+if(currentUser?.id!==user.id||currentProfile?.role!=='admin'){
+notify('Access denied: Admin only');
+return false;
+}
+return true;
+}
+async function openAdmin(){
+if(!await requireAdmin())return;
+if(adminRoute)$('adminLoginPage').classList.add('hidden');
+openModal('adminModal');
+await loadAdminDashboard();
+}
+function activateAdminMenu(button){
+document.querySelectorAll('.admin-menu button').forEach(b=>b.classList.remove('active'));
+if(button)button.classList.add('active');
+}
+function showAdminTab(tab,button){
+document.querySelectorAll('#adminModal .admin-main section').forEach(section=>section.classList.add('hidden'));
+$(tab).classList.remove('hidden');
+if(button)activateAdminMenu(button);
+if(tab==='adminOverview')loadAdminDashboard();
+if(tab==='adminOrders')loadAdminOrders();
+if(tab==='adminCustomers')loadAdminCustomers();
+if(tab==='adminProducts')loadAdminProducts();
+if(tab==='adminCategories')loadAdminCategories();
+if(tab==='adminCoupons')loadAdminCoupons();
+if(tab==='adminReports')loadAdminReports();
+if(tab==='adminSupport')loadAdminSupportTickets();
+}
+async function adminRefresh(){
+if(!await requireAdmin())return;
+const active=document.querySelector('#adminModal .admin-main section:not(.hidden)');
+if(active?.id==='adminSupport')await loadAdminSupportTickets();
+else await loadAdminDashboard();
+notify('Dashboard refreshed');
+}
+
+/* ADMIN SUPPORT */
+async function loadAdminSupportTickets(){
+if(!await requireAdmin())return;
+$('adminSupportTicketList').innerHTML='<div class="muted">Loading tickets...</div>';
+const {data,error}=await db.from('support_tickets').select('*').order('created_at',{ascending:false});
+if(error){
+$('adminSupportTicketList').textContent='Tickets load nahi hue: '+error.message;
+return;
+}
+if(!data?.length){
+$('adminSupportTicketList').innerHTML='<div class="empty">No support tickets yet.</div>';
+return;
+}
+$('adminSupportTicketList').innerHTML=data.map(t=>`
+<div class="support-ticket" onclick="openAdminSupportTicket(${Number(t.id)})">
+<div style="display:flex;justify-content:space-between;gap:7px">
+<b>#${Number(t.id)} ${escapeHtml(t.subject)}</b>
+<span class="support-status ${supportStatusClass(t.status)}">${escapeHtml(t.status)}</span>
+</div>
+<div class="muted">${escapeHtml(t.category||'General')}</div>
+<div class="support-meta">Customer ID: ${escapeHtml(t.user_id)}<br>${new Date(t.created_at).toLocaleString('en-IN')}</div>
+</div>`).join('');
+if(adminSelectedTicket&&!data.some(t=>Number(t.id)===Number(adminSelectedTicket))){
+adminSelectedTicket=null;
+resetAdminSupportChat();
+}
+}
+
+function resetAdminSupportChat(){
+$('adminSupportChatTitle').textContent='Select a ticket';
+$('adminSupportMessages').textContent='Choose a customer ticket to view messages.';
+$('adminSupportStatus').disabled=true;
+$('adminSupportReply').disabled=true;
+$('adminSupportSendBtn').disabled=true;
+}
+
+async function openAdminSupportTicket(ticketId){
+if(!await requireAdmin())return;
+const {data:ticket,error}=await db.from('support_tickets').select('*').eq('id',ticketId).maybeSingle();
+if(error||!ticket){notify('Ticket not found');return;}
+adminSelectedTicket=ticket.id;
+$('adminSupportChatTitle').textContent='#'+ticket.id+' — '+ticket.subject;
+$('adminSupportStatus').value=ticket.status||'Pending';
+$('adminSupportStatus').disabled=false;
+$('adminSupportReply').disabled=false;
+$('adminSupportSendBtn').disabled=false;
+await loadAdminSupportMessages(ticket.id);
+}
+
+async function loadAdminSupportMessages(ticketId){
+if(!await requireAdmin())return;
+if(Number(adminSelectedTicket)!==Number(ticketId))return;
+const {data,error}=await db.from('support_messages').select('*').eq('ticket_id',ticketId).order('created_at',{ascending:true});
+if(error){$('adminSupportMessages').textContent=error.message;return;}
+$('adminSupportMessages').innerHTML=(data||[]).map(m=>`
+<div class="support-msg ${m.sender_role==='admin'?'support-admin':'support-customer'}">
+<b>${m.sender_role==='admin'?'SUPER MART Admin':'Customer'}</b>
+<div>${escapeHtml(m.message)}</div>
+<div class="support-meta">${new Date(m.created_at).toLocaleString('en-IN')}</div>
+</div>`).join('')||'<div class="muted">No messages yet.</div>';
+$('adminSupportMessages').scrollTop=$('adminSupportMessages').scrollHeight;
+}
+
+async function sendAdminSupportMessage(event){
+event.preventDefault();
+if(!await requireAdmin())return;
+const ticketId=adminSelectedTicket;
+const message=$('adminSupportReply').value.trim();
+if(!ticketId||!message)return;
+const btn=$('adminSupportSendBtn');
+btn.disabled=true;
+try{
+const {error}=await db.from('support_messages').insert({
+ticket_id:ticketId,user_id:currentUser.id,sender_role:'admin',message
+});
+if(error)throw error;
+$('adminSupportReply').value='';
+await loadAdminSupportMessages(ticketId);
+notify('Reply sent to customer');
+}catch(error){notify('Reply failed: '+error.message);}
+finally{btn.disabled=false;}
+}
+
+async function updateSupportStatus(){
+if(!await requireAdmin())return;
+const ticketId=adminSelectedTicket;
+if(!ticketId)return;
+const status=$('adminSupportStatus').value;
+const {error}=await db.from('support_tickets').update({
+status,updated_at:new Date().toISOString()
+}).eq('id',ticketId);
+if(error){notify('Status update failed: '+error.message);return;}
+$('adminSupportChatTitle').textContent=$('adminSupportChatTitle').textContent.split(' (')[0]+' ('+status+')';
+notify('Ticket status updated');
+await loadAdminSupportTickets();
+}
+
+/* ADMIN DASHBOARD */
+async function loadAdminDashboard(){
+if(!await requireAdmin())return;
+const [ordersResult,productsResult]=await Promise.all([
+ db.from('orders').select('id,total,status,order_items(quantity,price,subtotal,cost_price)'),
+ db.from('products').select('id,stock')
+]);
+if(ordersResult.error||productsResult.error){
+ notify('Dashboard data load nahi hua: '+(ordersResult.error?.message||productsResult.error?.message||'Unknown error'));
+ return;
+}
+const orders=ordersResult.data||[];
+const activeOrders=orders.filter(o=>String(o.status||'Pending').toLowerCase()!=='cancelled');
+const totalSales=activeOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
+const netProfit=activeOrders.reduce((sum,o)=>{
+ const costTotal=(o.order_items||[]).reduce((itemSum,item)=>{
+  return itemSum+(Number(item.cost_price||0)*Number(item.quantity||0));
+ },0);
+ // Use the final order total so coupon discounts are reflected in realized profit.
+ return sum+Number(o.total||0)-costTotal;
+},0);
+const lowStock=(productsResult.data||[]).filter(p=>Number(p.stock||0)<=5).length;
+$('statSales').textContent=money(totalSales);
+$('statProfit').textContent=money(netProfit);
+$('statOrders').textContent=orders.length;
+$('statLowStock').textContent=lowStock;
+await loadAdminRecentOrders();
+}
+async function loadAdminRecentOrders(){
+if(!await requireAdmin())return;
+const {data,error}=await db.from('orders').select('id,customer_name,total,status,created_at').order('created_at',{ascending:false}).limit(5);
+if(error){$('adminRecentOrders').textContent=error.message;return;}
+$('adminRecentOrders').innerHTML=`<table class="admin-table">
+<thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+<tbody>${(data||[]).map(o=>`<tr>
+<td>#${escapeHtml(o.id)}<br><small>${new Date(o.created_at).toLocaleDateString('en-IN')}</small></td>
+<td>${escapeHtml(o.customer_name||'Customer')}</td><td>${money(o.total)}</td>
+<td><span class="admin-status">${escapeHtml(o.status||'Pending')}</span></td>
+</tr>`).join('')}</tbody></table>`;
+}
+
+/* ADMIN PRODUCTS */
+async function loadAdminProducts(){
+if(!await requireAdmin())return;
+const {data,error}=await db.from('products').select('*').order('created_at',{ascending:false});
+if(error){$('adminProductList').textContent=error.message;return;}
+$('adminProductList').innerHTML=`<table class="admin-table">
+<thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+<tbody>${(data||[]).map(p=>`<tr>
+<td>${escapeHtml(p.name)}</td><td>${money(p.price)}</td><td>${Number(p.stock||0)}</td>
+<td><div class="admin-action">
+<button class="secondary" onclick="editProduct(${p.id})">Edit</button>
+<button class="danger" onclick="deleteProduct(${p.id})">Delete</button>
+</div></td></tr>`).join('')}</tbody></table>`;
+}
+function resetProductForm(){
+$('productForm').reset();$('editProductId').value='';$('saveProductBtn').textContent='Add Product';$('pStock').value=10;
+}
+async function editProduct(id){
+if(!await requireAdmin())return;
+const {data,error}=await db.from('products').select('*').eq('id',id).single();
+if(error||!data){notify(error?.message||'Product not found');return;}
+$('editProductId').value=data.id;
+$('pName').value=data.name||'';
+$('pCategory').value=data.category||'';
+$('pPrice').value=data.price||0;
+$('pOldPrice').value=data.old_price||'';
+$('pStock').value=data.stock||0;
+$('pEmoji').value=data.emoji||'';
+$('pImage').value=data.image_url||'';
+$('pDescription').value=data.description||'';
+$('saveProductBtn').textContent='Update Product';
+$('adminProducts').scrollIntoView({behavior:'smooth'});
+}
+$('productForm').addEventListener('submit',async event=>{
+event.preventDefault();
+if(!await requireAdmin())return;
+const id=$('editProductId').value;
+const product={
+name:$('pName').value.trim(),category:$('pCategory').value.trim(),
+price:Number($('pPrice').value),old_price:Number($('pOldPrice').value)||null,
+stock:Number($('pStock').value),cost_price:Number($('pCostPrice').value),emoji:$('pEmoji').value.trim()||'🛍️',
+image_url:$('pImage').value.trim()||null,
+description:$('pDescription').value.trim(),active:true
+};
+try{
+const result=id?await db.from('products').update(product).eq('id',id):await db.from('products').insert(product);
+if(result.error)throw result.error;
+notify(id?'Product updated':'Product added');
+resetProductForm();
+await loadProducts();await loadAdminProducts();await loadAdminDashboard();
+}catch(error){notify(error.message||'Product save failed');}
+});
+async function deleteProduct(id){
+if(!await requireAdmin())return;
+if(!confirm('Delete this product?'))return;
+const {error}=await db.from('products').delete().eq('id',id);
+if(error){notify(error.message);return;}
+notify('Product deleted');
+await loadProducts();await loadAdminProducts();await loadAdminDashboard();
+}
+
+/* ADMIN CATEGORIES */
+async function loadAdminCategories(){
+if(!await requireAdmin())return;
+const {data,error}=await db.from('categories').select('*').order('name');
+if(error){$('adminCategoryList').textContent=error.message;return;}
+categories=data||[];
+$('adminCategoryList').innerHTML=`<table class="admin-table">
+<thead><tr><th>Category</th><th>Action</th></tr></thead>
+<tbody>${categories.map(c=>`<tr><td>${escapeHtml(c.name)}</td><td><button class="danger" onclick="deleteCategory(${c.id})">Delete</button></td></tr>`).join('')}</tbody></table>`;
+$('categoryOptions').innerHTML=categories.map(c=>`<option value="${escapeHtml(c.name)}">`).join('');
+$('categoryFilter').innerHTML='<option value="all">All categories</option>'+categories.map(c=>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+}
+async function addCategory(){
+if(!await requireAdmin())return;
+const name=$('categoryName').value.trim();
+if(!name)return notify('Enter category name');
+const {error}=await db.from('categories').insert({name});
+if(error){notify(error.message);return;}
+$('categoryName').value='';
+notify('Category added');
+await loadCategories();await loadAdminCategories();
+}
+async function deleteCategory(id){
+if(!await requireAdmin())return;
+if(!confirm('Delete this category?'))return;
+const {error}=await db.from('categories').delete().eq('id',id);
+if(error){notify(error.message);return;}
+notify('Category deleted');
+await loadCategories();await loadAdminCategories();
+}
+
+/* ADMIN ORDERS */
+const ORDER_STATUSES=['Pending','Processing','Shipped','Out for Delivery','Delivered','Cancelled'];
+let adminOrdersCache=[];
+
+async function loadAdminOrders(){
+if(!await requireAdmin())return;
+$('adminOrderList').innerHTML='<div class="empty">Loading orders...</div>';
+const {data,error}=await db.from('orders').select('*,order_items(*)').order('created_at',{ascending:false});
+if(error){$('adminOrderList').textContent='Orders load nahi hue: '+error.message;return;}
+adminOrdersCache=data||[];
+renderAdminOrders();
+}
+
+function renderAdminOrders(){
+const query=($('adminOrderSearch')?.value||'').trim().toLowerCase();
+const statusFilter=$('adminOrderStatusFilter')?.value||'all';
+const filtered=adminOrdersCache.filter(o=>{
+ const address=(o.address&&typeof o.address==='object')?o.address:{};
+ const searchText=[
+  o.id,o.customer_name,o.phone,address.name,address.phone,
+  address.address,address.city,address.pin,address.pincode,o.user_id
+ ].join(' ').toLowerCase();
+ const status=String(o.status||'Pending');
+ return (!query||searchText.includes(query))&&(statusFilter==='all'||status===statusFilter);
+});
+if(!filtered.length){
+ $('adminOrderList').innerHTML='<div class="empty">No matching orders found.</div>';
+ return;
+}
+$('adminOrderList').innerHTML=`<table class="admin-table">
+<thead><tr><th>Order Details</th><th>Customer & Address</th><th>Items</th><th>Total</th><th>Status</th><th>Tracking Note</th><th>Action</th></tr></thead>
+<tbody>${filtered.map(o=>{
+ const address=(o.address&&typeof o.address==='object')?o.address:{};
+ const fullAddress=[address.address,address.city,address.pin||address.pincode].filter(Boolean).join(', ');
+ return `<tr>
+ <td><b>#${escapeHtml(o.id)}</b><br><small>${new Date(o.created_at).toLocaleString('en-IN')}</small></td>
+ <td><b>${escapeHtml(o.customer_name||address.name||'Customer')}</b><br>${escapeHtml(o.phone||address.phone||'')}<br>${escapeHtml(fullAddress||'Address not available')}</td>
+ <td>${(o.order_items||[]).map(item=>`${escapeHtml(item.product_name||item.name||'Product')} × ${Number(item.quantity||1)}`).join('<br>')}</td>
+ <td>${money(o.total)}</td>
+ <td><select class="admin-status-select" id="status-${Number(o.id)}">${ORDER_STATUSES.map(st=>`<option value="${st}" ${String(o.status||'Pending')===st?'selected':''}>${st}</option>`).join('')}</select></td>
+ <td><input class="admin-note" id="note-${Number(o.id)}" value="${escapeHtml(o.tracking_note||'')}" placeholder="Tracking update"></td>
+ <td><button onclick="updateOrderStatus(${Number(o.id)})">Save</button></td>
+ </tr>`;
+ }).join('')}</tbody></table>`;
+}
+async function updateOrderStatus(id){
+if(!await requireAdmin())return;
+const status=$('status-'+id).value;
+const trackingNote=$('note-'+id).value.trim();
+const {error}=await db.from('orders').update({status,tracking_note:trackingNote,updated_at:new Date().toISOString()}).eq('id',id);
+if(error){notify('Update failed: '+error.message);return;}
+notify('Order status and tracking updated');
+await loadAdminOrders();await loadAdminRecentOrders();await loadAdminReports();
+}
+
+/* ADMIN CUSTOMERS */
+async function loadAdminCustomers(){
+if(!await requireAdmin())return;
+const {data,error}=await db.from('profiles').select('*').order('created_at',{ascending:false});
+if(error){$('adminCustomerList').textContent=error.message;return;}
+$('adminCustomerList').innerHTML=`<table class="admin-table">
+<thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+<tbody>${(data||[]).map(c=>`<tr><td>${escapeHtml(c.name||'Customer')}</td><td>${escapeHtml(c.email||'')}</td><td>${escapeHtml(c.role||'customer')}</td></tr>`).join('')}</tbody></table>`;
+}
+
+/* ADMIN COUPONS */
+async function loadAdminCoupons(){
+if(!await requireAdmin())return;
+const {data,error}=await db.from('coupons').select('*').order('code');
+if(error){$('adminCouponList').textContent=error.message;return;}
+$('adminCouponList').innerHTML=`<table class="admin-table">
+<thead><tr><th>Code</th><th>Discount</th><th>Status</th><th>Action</th></tr></thead>
+<tbody>${(data||[]).map(c=>`<tr><td>${escapeHtml(c.code)}</td><td>${money(c.discount)}</td><td>${c.active?'Active':'Inactive'}</td><td><button class="danger" onclick="deleteCoupon(${c.id})">Delete</button></td></tr>`).join('')}</tbody></table>`;
+}
+async function addCoupon(){
+if(!await requireAdmin())return;
+const code=$('couponCodeAdmin').value.trim().toUpperCase();
+const discount=Number($('couponDiscountAdmin').value);
+if(!code||discount<=0)return notify('Enter valid coupon details');
+const {error}=await db.from('coupons').insert({code,discount,active:true});
+if(error){notify(error.message);return;}
+$('couponCodeAdmin').value='';$('couponDiscountAdmin').value='';
+notify('Coupon added');await loadAdminCoupons();
+}
+async function deleteCoupon(id){
+if(!await requireAdmin())return;
+if(!confirm('Delete this coupon?'))return;
+const {error}=await db.from('coupons').delete().eq('id',id);
+if(error){notify(error.message);return;}
+notify('Coupon deleted');await loadAdminCoupons();
+}
+
+/* SALES REPORTS */
+async function loadAdminReports(){
+if(!await requireAdmin())return;
+const {data,error}=await db.from('orders').select('id,total,status,created_at').order('created_at',{ascending:false});
+if(error){$('adminReportContent').textContent=error.message;return;}
+const orders=data||[];
+const total=orders.length;
+const revenue=orders.filter(o=>String(o.status||'').toLowerCase()!=='cancelled').reduce((s,o)=>s+Number(o.total||0),0);
+const counts={};
+ORDER_STATUSES.forEach(s=>counts[s]=0);
+orders.forEach(o=>{const status=o.status||'Pending';counts[status]=(counts[status]||0)+1;});
+$('adminReportContent').innerHTML=`
+<div class="admin-cards">
+<div class="admin-card"><small>Total Orders</small><strong>${total}</strong></div>
+<div class="admin-card"><small>Sales Value (excluding cancelled)</small><strong>${money(revenue)}</strong></div>
+<div class="admin-card"><small>Delivered</small><strong>${counts.Delivered||0}</strong></div>
+<div class="admin-card"><small>Cancelled</small><strong>${counts.Cancelled||0}</strong></div>
+</div>
+<div class="admin-content"><h3>Order Status Report</h3>
+${ORDER_STATUSES.map(status=>{
+const count=counts[status]||0;
+const percent=total?Math.round(count/total*100):0;
+return `<div style="margin:14px 0">
+<div style="display:flex;justify-content:space-between;gap:8px"><b>${status}</b><span>${count} orders (${percent}%)</span></div>
+<div class="admin-bar"><span style="width:${percent}%"></span></div>
+</div>`;
+}).join('')}</div>
+<div class="admin-content"><h3>Recent Sales</h3><div class="table-wrap">
+<table class="admin-table"><thead><tr><th>Order ID</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+<tbody>${orders.slice(0,20).map(o=>`<tr><td>#${escapeHtml(o.id)}</td><td>${new Date(o.created_at).toLocaleDateString('en-IN')}</td><td>${money(o.total)}</td><td>${escapeHtml(o.status||'Pending')}</td></tr>`).join('')}</tbody></table>
+</div></div>`;
+}
+
+/* AUTH STATE CHANGE */
+db.auth.onAuthStateChange((event,session)=>{
+const newUser=session?.user||null;
+const oldId=currentUser?.id||null;
+const newId=newUser?.id||null;
+if(oldId!==newId){
+authGeneration++;ordersGeneration++;profileGeneration++;
+currentProfile=null;
+}
+currentUser=newUser;
+updateAccountButton();
+if(newUser){
+const userId=newUser.id;
+const generation=authGeneration;
+setTimeout(async()=>{
+if(generation!==authGeneration||currentUser?.id!==userId)return;
+try{await loadProfile(userId);updateAccountButton();}
+catch(error){console.warn('Profile refresh:',error);}
+},0);
+}else{
+currentProfile=null;
+}
+});
+
+/* INITIAL LOAD */
+async function init(){
+$('year').textContent=new Date().getFullYear();
+renderCart();
+await loadSession();
+
+if(adminRoute){
+if(currentUser){
+await loadProfile(currentUser.id);
+if(currentProfile?.role==='admin'){
+$('adminLoginPage').classList.add('hidden');
+await openAdmin();
+}else{
+showAdminLogin('This account does not have admin access.');
+}
+}else{
+showAdminLogin();
+}
+return;
+}
+await loadCategories();
+await loadProducts();
+}
+init();
+</script>
+</body>
+</html>
