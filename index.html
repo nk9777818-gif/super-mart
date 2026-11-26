@@ -337,7 +337,14 @@ Aap apna sawal yahan pooch sakte hain.</div></div>
 <div class="notice">Currently available payment method: Cash on Delivery.</div>
 <form id="checkoutForm">
 <div class="field"><label>Full name</label><input id="customerName" required></div>
-<div class="field"><label>Phone number</label><input id="customerPhone" required inputmode="tel" pattern="[0-9+ -]{8,16}"></div>
+<div class="field">
+<label for="customerPhone">Phone number</label>
+<input id="customerPhone" type="tel" required inputmode="numeric" autocomplete="tel-national"
+       maxlength="10" minlength="10" pattern="[6-9][0-9]{9}"
+       title="Enter a valid 10-digit Indian mobile number starting with 6, 7, 8 or 9"
+       aria-describedby="customerPhoneError">
+<small id="customerPhoneError" role="alert" style="display:none;color:#c62828;margin-top:5px"></small>
+</div>
 <div class="field"><label>Full address</label><textarea id="customerAddress" required></textarea></div>
 <div class="form-row">
 <div class="field"><label>City</label><input id="customerCity" required></div>
@@ -1049,8 +1056,31 @@ updateCheckoutSummary();
 appliedCoupon=null;msg.textContent=err.message;msg.style.color='red';updateCheckoutSummary();
 }finally{btn.disabled=false;btn.textContent='Apply';}
 }
+const customerPhoneInput=$('customerPhone');
+const customerPhoneError=$('customerPhoneError');
+function validateCustomerPhone(showError=true){
+const phone=customerPhoneInput.value.trim();
+const valid=/^[6-9][0-9]{9}$/.test(phone);
+if(showError){
+customerPhoneError.textContent=valid?'':'Please enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.';
+customerPhoneError.style.display=valid?'none':'block';
+}
+return valid;
+}
+customerPhoneInput.addEventListener('input',()=>{
+if(customerPhoneInput.value.length===10)validateCustomerPhone(true);
+else{customerPhoneError.textContent='';customerPhoneError.style.display='none';}
+});
+customerPhoneInput.addEventListener('blur',()=>{
+if(customerPhoneInput.value.trim())validateCustomerPhone(true);
+});
 $('checkoutForm').addEventListener('submit',async e=>{
 e.preventDefault();
+if(!validateCustomerPhone(true)){
+customerPhoneInput.focus();
+customerPhoneInput.reportValidity();
+return;
+}
 const btn=$('placeOrderBtn');
 btn.disabled=true;btn.textContent='Placing order...';
 try{
@@ -1410,39 +1440,31 @@ await loadAdminSupportTickets();
 
 /* ADMIN DASHBOARD */
 async function loadAdminDashboard(){
- if(!await requireAdmin())return;
- const [ordersResult,productsResult]=await Promise.all([
-  db.from('orders').select('id,total,status,created_at,order_items(quantity,price,subtotal,cost_price,product_name,product_id)'),
-  db.from('products').select('id,name,stock,active')
- ]);
- if(ordersResult.error||productsResult.error){
-  notify('Dashboard data load nahi hua: '+(ordersResult.error?.message||productsResult.error?.message||'Unknown error'));
-  return;
- }
- const orders=ordersResult.data||[],products=productsResult.data||[];
- const nonCancelled=orders.filter(o=>String(o.status||'Pending').toLowerCase()!=='cancelled');
- const range=$('adminDashboardRange')?.value||'30';
- const cutoff=new Date();cutoff.setHours(0,0,0,0);
- if(range!=='all')cutoff.setDate(cutoff.getDate()-Number(range)+1);
- const inRange=o=>range==='all'||(o.created_at&&new Date(o.created_at)>=cutoff);
- const periodOrders=nonCancelled.filter(inRange);
- const totalSales=periodOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
- const netProfit=periodOrders.reduce((sum,o)=>{
-  const costTotal=(o.order_items||[]).reduce((s,item)=>s+Number(item.cost_price||0)*Number(item.quantity||0),0);
-  return sum+Number(o.total||0)-costTotal;
+if(!await requireAdmin())return;
+const [ordersResult,productsResult]=await Promise.all([
+ db.from('orders').select('id,total,status,order_items(quantity,price,subtotal,cost_price)'),
+ db.from('products').select('id,stock')
+]);
+if(ordersResult.error||productsResult.error){
+ notify('Dashboard data load nahi hua: '+(ordersResult.error?.message||productsResult.error?.message||'Unknown error'));
+ return;
+}
+const orders=ordersResult.data||[];
+const activeOrders=orders.filter(o=>String(o.status||'Pending').toLowerCase()!=='cancelled');
+const totalSales=activeOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
+const netProfit=activeOrders.reduce((sum,o)=>{
+ const costTotal=(o.order_items||[]).reduce((itemSum,item)=>{
+  return itemSum+(Number(item.cost_price||0)*Number(item.quantity||0));
  },0);
- const low=products.filter(p=>p.active!==false&&Number(p.stock||0)<=5).sort((a,b)=>Number(a.stock||0)-Number(b.stock||0));
- $('statSales').textContent=money(totalSales);$('statProfit').textContent=money(netProfit);$('statOrders').textContent=periodOrders.length;$('statLowStock').textContent=low.length;
- const totals=new Map();
- periodOrders.forEach(o=>(o.order_items||[]).forEach(item=>{
-  const name=item.product_name||('Product #'+(item.product_id??'unknown'));
-  const old=totals.get(name)||{qty:0,sales:0};
-  old.qty+=Number(item.quantity||0);old.sales+=Number(item.price||0)*Number(item.quantity||0);totals.set(name,old);
- }));
- const top=[...totals.entries()].map(([name,v])=>({name,...v})).sort((a,b)=>b.qty-a.qty).slice(0,5);
- $('adminTopProducts').innerHTML=top.length?`<table class="admin-table"><thead><tr><th>Product</th><th>Qty sold</th><th>Sales</th></tr></thead><tbody>${top.map(p=>`<tr><td>${escapeHtml(p.name)}</td><td>${p.qty}</td><td>${money(p.sales)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No sales in this period</div>';
- $('adminLowStockList').innerHTML=low.length?`<table class="admin-table"><thead><tr><th>Product</th><th>Stock</th><th>Alert</th></tr></thead><tbody>${low.slice(0,10).map(p=>`<tr><td>${escapeHtml(p.name)}</td><td>${Number(p.stock||0)}</td><td>${Number(p.stock||0)===0?'Out of stock':'Low stock'}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">All active products have sufficient stock</div>';
- await loadAdminRecentOrders();
+ // Use the final order total so coupon discounts are reflected in realized profit.
+ return sum+Number(o.total||0)-costTotal;
+},0);
+const lowStock=(productsResult.data||[]).filter(p=>Number(p.stock||0)<=5).length;
+$('statSales').textContent=money(totalSales);
+$('statProfit').textContent=money(netProfit);
+$('statOrders').textContent=orders.length;
+$('statLowStock').textContent=lowStock;
+await loadAdminRecentOrders();
 }
 async function loadAdminRecentOrders(){
 if(!await requireAdmin())return;
