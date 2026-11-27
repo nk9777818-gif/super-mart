@@ -139,7 +139,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <aside class="sidebar">
    <button class="active" data-page="dashboard" onclick="navigate('dashboard',this)">▦ Dashboard</button>
    <button data-page="products" onclick="navigate('products',this)">▣ Products</button>
-   <button data-page="categories" onclick="navigate('categories',this)">▤ Categories</button>
+   
    <button data-page="orders" onclick="navigate('orders',this)">▧ Orders</button>
    <button data-page="support" onclick="navigate('support',this)">✉ Support</button>
    <button data-page="customers" onclick="navigate('customers',this)">♙ Customers</button>
@@ -147,7 +147,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
   </aside>
   <main class="main">
    <section id="page-dashboard" class="page">
-    <div class="page-head"><div><div class="section-kicker">Seller Central</div><h1>Dashboard Overview</h1></div><div class="toolbar" style="margin:0"><select id="dashboardRange" onchange="loadDashboard()"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="all">All time</option></select><button class="secondary" onclick="loadDashboard()">↻ Refresh</button></div></div>
+    <div class="page-head"><div><div class="section-kicker">Seller Central</div><h1>Dashboard Overview</h1></div><button class="secondary" onclick="loadDashboard()">↻ Refresh</button></div>
     <div class="stats">
      <div class="stat"><div class="stat-label"><small>Open Orders</small><span class="stat-icon">📦</span></div><strong id="statOpenOrders">—</strong><small class="muted">Awaiting completion</small></div>
      <div class="stat"><div class="stat-label"><small>Today’s Sales</small><span class="stat-icon">₹</span></div><strong id="statSales">—</strong><small class="muted">Non-cancelled orders</small></div>
@@ -156,8 +156,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
     </div>
     <p class="muted" style="font-size:12px;margin:-8px 0 18px">Profit accuracy depends on supplier cost being saved in each order item. Older items with ₹0 cost may show incomplete profit.</p>
     <div class="chart-grid"><div class="panel"><h3>Sales & Net Profit · Last 7 Days</h3><div class="chart-box"><canvas id="salesChart"></canvas></div></div><div class="panel"><h3>Order Status</h3><div class="chart-box"><canvas id="statusChart"></canvas></div></div></div>
-    <div class="chart-grid"><div class="panel"><h3>Top Selling Products</h3><div id="topProducts" class="empty">Loading...</div></div><div class="panel"><h3>Low Stock Alerts</h3><div id="lowStockList" class="empty">Loading...</div></div></div>
-     <div class="panel"><h3>Recent Orders</h3><div id="recentOrders" class="empty">Loading...</div></div>
+    <div class="panel"><h3>Recent Orders</h3><div id="recentOrders" class="empty">Loading...</div></div>
    </section>
    <section id="page-products" class="page hidden">
     <div class="page-head"><h1>Products</h1><button onclick="openProductForm()">＋ Add Product</button></div>
@@ -165,9 +164,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
     <div class="table-wrap"><table class="table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead><tbody id="productsBody"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody></table></div>
    </section>
    <section id="page-categories" class="page hidden">
-    <div class="page-head"><h1>Categories</h1></div>
-    <div class="form-panel" style="margin-bottom:15px"><h3>Add Category</h3><div class="toolbar" style="margin:0"><input id="categoryName" placeholder="Enter category name"><button onclick="addCategory()">Add Category</button></div></div>
-    <div class="panel"><h3>All Categories</h3><div id="categoryList" class="empty">Loading...</div></div>
+    <div class="page-head"><h1>Store Category</h1></div>
+    <div class="panel"><h3>Clothes</h3><p class="muted">Only Clothes category is enabled. Other categories are hidden and preserved for a future business upgrade.</p></div>
    </section>
    <section id="page-orders" class="page hidden">
     <div class="page-head"><h1>Orders</h1><button class="secondary" onclick="loadOrders()">↻ Refresh</button></div>
@@ -187,7 +185,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
    </section>
    <section id="page-customers" class="page hidden">
     <div class="page-head"><h1>Customers</h1><button class="secondary" onclick="loadCustomers()">↻ Refresh</button></div>
-    <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead><tbody id="customersBody"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody></table></div>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Approval</th><th>Joined</th><th>Action</th></tr></thead><tbody id="customersBody"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody></table></div>
    </section>
    <section id="page-coupons" class="page hidden">
     <div class="page-head"><h1>Coupons</h1></div>
@@ -200,7 +198,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <div id="productModal" class="modal-backdrop"><div class="modal"><div class="modal-head"><h3 id="productModalTitle">Add Product</h3><button class="secondary" onclick="closeProductForm()">✕</button></div>
  <form id="productForm"><input type="hidden" id="pId"><div class="grid-form">
   <div class="field"><label>Product Name *</label><input id="pName" required></div>
-  <div class="field"><label>Category</label><input id="pCategory" list="categoryOptions" placeholder="Category"><datalist id="categoryOptions"></datalist></div>
+  <div class="field"><label>Category</label><input id="pCategory" value="Clothes" readonly><datalist id="categoryOptions"><option value="Clothes"></option></datalist></div>
   <div class="field"><label>Price (₹) *</label><input id="pPrice" type="number" min="0" step="0.01" required></div>
   <div class="field"><label>Supplier Cost Price (₹) *</label><input id="pCostPrice" type="number" min="0" step="0.01" value="0" required></div>
   <div class="field"><label>Old Price</label><input id="pOldPrice" type="number" min="0" step="0.01"></div>
@@ -217,7 +215,6 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <script>
 const SUPABASE_URL='https://kmyrqipubmwzvjokwmli.supabase.co';
 const SUPABASE_KEY='sb_publishable_K5g61U2Pr9iPyIxbcmyEvw_Dvysu-4O';
-// Keep admin authentication separate from the customer website session.
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storageKey:'super-mart-admin-auth'}});
 const $=id=>document.getElementById(id);
 let currentUser=null;
@@ -253,56 +250,31 @@ let salesChartInstance=null,statusChartInstance=null;
 async function loadDashboard(){
  const [ordersResult,itemsResult,productsResult]=await Promise.all([
   db.from('orders').select('id,total,status,created_at'),
-  db.from('order_items').select('order_id,product_id,product_name,quantity,price,cost_price'),
-  db.from('products').select('id,name,stock,active')
+  db.from('order_items').select('order_id,quantity,price,cost_price'),
+  db.from('products').select('id,stock,active').eq('category','Clothes')
  ]);
  const err=ordersResult.error||itemsResult.error||productsResult.error;
  if(err){notify('Dashboard load failed: '+err.message);['statSales','statProfit','statOpenOrders','statLowStock'].forEach(id=>$(id).textContent='—');return;}
  const orders=ordersResult.data||[],items=itemsResult.data||[],products=productsResult.data||[];
  const validOrders=orders.filter(o=>String(o.status||'Pending').toLowerCase()!=='cancelled');
- const range=$('dashboardRange')?.value||'30';
- const cutoff=new Date();cutoff.setHours(0,0,0,0);
- if(range!=='all')cutoff.setDate(cutoff.getDate()-Number(range)+1);
- const inRange=o=>range==='all'||(o.created_at&&new Date(o.created_at)>=cutoff);
- const periodOrders=validOrders.filter(inRange);
- const periodIds=new Set(periodOrders.map(o=>String(o.id)));
- const periodItems=items.filter(it=>periodIds.has(String(it.order_id)));
- const sales=periodOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
- const profit=periodItems.reduce((sum,it)=>sum+(Number(it.price||0)-Number(it.cost_price||0))*Number(it.quantity||0),0);
- const low=products.filter(p=>p.active!==false&&Number(p.stock||0)<=5).sort((x,y)=>Number(x.stock||0)-Number(y.stock||0));
+ const validIds=new Set(validOrders.map(o=>String(o.id)));
+ const today=new Date();today.setHours(0,0,0,0);
+ const todaySales=validOrders.filter(o=>o.created_at&&new Date(o.created_at)>=today).reduce((sum,o)=>sum+Number(o.total||0),0);
+ const profit=items.reduce((sum,item)=>validIds.has(String(item.order_id))?sum+(Number(item.price||0)-Number(item.cost_price||0))*Number(item.quantity||0):sum,0);
+ const lowStock=products.filter(p=>p.active!==false&&Number(p.stock||0)<=5).length;
  const openOrders=orders.filter(o=>!['delivered','cancelled'].includes(String(o.status||'Pending').toLowerCase())).length;
- $('statSales').textContent=money(sales);$('statProfit').textContent=money(profit);$('statOpenOrders').textContent=openOrders;$('statLowStock').textContent=low.length;
+ $('statSales').textContent=money(todaySales);$('statProfit').textContent=money(profit);$('statOpenOrders').textContent=openOrders;$('statLowStock').textContent=lowStock;
  const dayLabels=[],salesByDay=[],profitByDay=[];
- const days=range==='all'?30:Number(range);
- for(let i=Math.min(days,90)-1;i>=0;i--){
-  const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);
-  const key=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
-  dayLabels.push(d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}));
-  const dayOrders=periodOrders.filter(o=>{if(!o.created_at)return false;const x=new Date(o.created_at);return x.getFullYear()===d.getFullYear()&&x.getMonth()===d.getMonth()&&x.getDate()===d.getDate();});
-  const ids=new Set(dayOrders.map(o=>String(o.id)));
-  salesByDay.push(dayOrders.reduce((n,o)=>n+Number(o.total||0),0));
-  profitByDay.push(items.reduce((n,it)=>ids.has(String(it.order_id))?n+(Number(it.price||0)-Number(it.cost_price||0))*Number(it.quantity||0):n,0));
- }
- if(window.Chart){
-  if(salesChartInstance)salesChartInstance.destroy();
-  salesChartInstance=new Chart($('salesChart'),{type:'bar',data:{labels:dayLabels,datasets:[{label:'Sales',data:salesByDay,backgroundColor:'#ff9900',borderRadius:6},{label:'Net Profit',data:profitByDay,type:'line',borderColor:'#2563eb',backgroundColor:'#2563eb',tension:.35,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'₹'+Number(v).toLocaleString('en-IN')}}}}});
-  const statuses=['Pending','Processing','Shipped','Delivered','Cancelled'];
-  const counts=statuses.map(st=>periodOrders.filter(o=>String(o.status||'Pending').toLowerCase()===st.toLowerCase()).length);
-  if(statusChartInstance)statusChartInstance.destroy();
-  statusChartInstance=new Chart($('statusChart'),{type:'doughnut',data:{labels:statuses,datasets:[{data:counts,backgroundColor:['#f59e0b','#3b82f6','#8b5cf6','#16a34a','#ef4444'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom'}}}});
- }
- const totals=new Map();
- periodItems.forEach(it=>{const name=it.product_name||('Product #'+(it.product_id??'unknown'));const old=totals.get(name)||{qty:0,sales:0};old.qty+=Number(it.quantity||0);old.sales+=Number(it.price||0)*Number(it.quantity||0);totals.set(name,old);});
- const top=[...totals.entries()].map(([name,v])=>({name,...v})).sort((x,y)=>y.qty-x.qty).slice(0,5);
- $('topProducts').innerHTML=top.length?`<div class="table-wrap"><table class="table"><thead><tr><th>Product</th><th>Qty sold</th><th>Sales</th></tr></thead><tbody>${top.map(p=>`<tr><td>${esc(p.name)}</td><td>${p.qty}</td><td>${money(p.sales)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No sales in this period</div>';
- $('lowStockList').innerHTML=low.length?`<div class="table-wrap"><table class="table"><thead><tr><th>Product</th><th>Stock</th><th>Status</th></tr></thead><tbody>${low.slice(0,10).map(p=>`<tr><td>${esc(p.name)}</td><td>${Number(p.stock||0)}</td><td>${Number(p.stock||0)===0?'<span class="pill red">Out of stock</span>':'<span class="pill orange">Low stock</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">All active products have sufficient stock</div>';
+ for(let i=6;i>=0;i--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);const key=d.toISOString().slice(0,10);dayLabels.push(d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}));const dayOrders=validOrders.filter(o=>o.created_at&&new Date(o.created_at).toISOString().slice(0,10)===key);const ids=new Set(dayOrders.map(o=>String(o.id)));salesByDay.push(dayOrders.reduce((n,o)=>n+Number(o.total||0),0));profitByDay.push(items.reduce((n,it)=>ids.has(String(it.order_id))?n+(Number(it.price||0)-Number(it.cost_price||0))*Number(it.quantity||0):n,0));}
+ if(window.Chart){if(salesChartInstance)salesChartInstance.destroy();salesChartInstance=new Chart($('salesChart'),{type:'bar',data:{labels:dayLabels,datasets:[{label:'Sales',data:salesByDay,backgroundColor:'#ff9900',borderRadius:6},{label:'Net Profit',data:profitByDay,type:'line',borderColor:'#2563eb',backgroundColor:'#2563eb',tension:.35,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'₹'+Number(v).toLocaleString('en-IN')}}}}});
+ const statuses=['Pending','Processing','Shipped','Delivered','Cancelled'];const counts=statuses.map(st=>orders.filter(o=>String(o.status||'Pending').toLowerCase()===st.toLowerCase()).length);if(statusChartInstance)statusChartInstance.destroy();statusChartInstance=new Chart($('statusChart'),{type:'doughnut',data:{labels:statuses,datasets:[{data:counts,backgroundColor:['#f59e0b','#3b82f6','#8b5cf6','#16a34a','#ef4444'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom'}}}});}
  const {data,error}=await db.from('orders').select('id,customer_name,total,status,created_at').order('created_at',{ascending:false}).limit(6);
  $('recentOrders').innerHTML=error?'<div class="empty">'+esc(error.message)+'</div>':(data?.length?`<div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>${data.map(o=>`<tr><td>#${o.id}</td><td>${esc(o.customer_name)}</td><td>${money(o.total)}</td><td>${statusPill(o.status)}</td><td>${dateText(o.created_at)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No orders yet</div>');
 }
 
 /* PRODUCTS */
 async function loadProducts(){
- const {data,error}=await db.from('products').select('*').order('created_at',{ascending:false});
+ const {data,error}=await db.from('products').select('*').eq('category','Clothes').order('created_at',{ascending:false});
  if(error){$('productsBody').innerHTML=`<tr><td colspan="6" class="empty">${esc(error.message)}</td></tr>`;return;}
  productsCache=data||[];renderProducts();
 }
@@ -314,7 +286,7 @@ function renderProducts(){
 }
 async function openProductForm(){await loadCategoryOptions();$('productForm').reset();$('pId').value='';$('pActive').checked=true;$('productModalTitle').textContent='Add Product';$('productModal').style.display='grid';}
 function closeProductForm(){$('productModal').style.display='none';}
-async function loadCategoryOptions(){const {data}=await db.from('categories').select('name').order('name');categoriesCache=data||[];$('categoryOptions').innerHTML=categoriesCache.map(c=>`<option value="${esc(c.name)}"></option>`).join('');}
+async function loadCategoryOptions(){categoriesCache=[{name:'Clothes'}];$('categoryOptions').innerHTML='<option value="Clothes"></option>';}
 async function editProduct(id){
  const p=productsCache.find(x=>x.id===id);if(!p)return;await loadCategoryOptions();
  $('pId').value=p.id;$('pName').value=p.name||'';$('pCategory').value=p.category||'';$('pPrice').value=p.price??'';$('pCostPrice').value=p.cost_price??0;$('pOldPrice').value=p.old_price??'';$('pStock').value=p.stock??0;$('pEmoji').value=p.emoji||'';$('pImage').value=p.image_url||'';$('pDescription').value=p.description||'';$('pActive').checked=!!p.active;
@@ -322,7 +294,7 @@ async function editProduct(id){
 }
 $('productForm').addEventListener('submit',async e=>{
  e.preventDefault();const id=$('pId').value;
- const payload={name:$('pName').value.trim(),category:$('pCategory').value.trim()||null,price:Number($('pPrice').value),cost_price:Number($('pCostPrice').value),old_price:$('pOldPrice').value===''?null:Number($('pOldPrice').value),stock:Number($('pStock').value||0),emoji:$('pEmoji').value.trim()||null,image_url:$('pImage').value.trim()||null,description:$('pDescription').value.trim()||null,active:$('pActive').checked};
+ const payload={name:$('pName').value.trim(),category:'Clothes',price:Number($('pPrice').value),cost_price:Number($('pCostPrice').value),old_price:$('pOldPrice').value===''?null:Number($('pOldPrice').value),stock:Number($('pStock').value||0),emoji:$('pEmoji').value.trim()||null,image_url:$('pImage').value.trim()||null,description:$('pDescription').value.trim()||null,active:$('pActive').checked};
  if(!payload.name){notify('Product name required');return;}
  const result=id?await db.from('products').update(payload).eq('id',id):await db.from('products').insert([payload]);
  if(result.error){notify('Save failed: '+result.error.message);return;}
@@ -332,22 +304,12 @@ async function toggleProduct(id,active){const {error}=await db.from('products').
 async function deleteProduct(id){if(!confirm('Permanently delete this product?'))return;const {error}=await db.from('products').delete().eq('id',id);if(error){notify('Delete failed: '+error.message);return;}notify('Product deleted');loadProducts();}
 /* CATEGORIES */
 async function loadCategories(){
- const list=$('categoryList');list.textContent='Loading...';
- const {data,error}=await db.from('categories').select('*').order('name',{ascending:true});
- if(error){list.innerHTML='<div class="empty">Load failed: '+esc(error.message)+'</div>';return;}
- categoriesCache=data||[];
- list.innerHTML=categoriesCache.length?categoriesCache.map(c=>`<div class="category-row"><div><b>${esc(c.name)}</b><br><small class="muted">Category ID: ${c.id}</small></div><button class="danger" onclick="deleteCategory(${c.id})">Delete</button></div>`).join(''):'<div class="empty">No categories yet</div>';
+ const list=$('categoryList');
+ if(list)list.innerHTML='<div class="category-row"><b>Clothes</b><span class="muted">Only active store category</span></div><p class="muted">Other categories are hidden and preserved for future use.</p>';
+ categoriesCache=[{name:'Clothes'}];
 }
-async function addCategory(){
- const input=$('categoryName'),name=input.value.trim();if(!name){notify('Enter category name');return;}
- if(categoriesCache.some(c=>String(c.name).toLowerCase()===name.toLowerCase())){notify('Category already exists');return;}
- const {error}=await db.from('categories').insert([{name}]);if(error){notify('Add failed: '+error.message);return;}
- input.value='';notify('Category added');await loadCategories();
-}
-async function deleteCategory(id){
- const c=categoriesCache.find(x=>x.id===id);if(!confirm(`Delete category "${c?.name||id}"? This does not delete products.`))return;
- const {error}=await db.from('categories').delete().eq('id',id);if(error){notify('Delete failed: '+error.message);return;}notify('Category deleted');await loadCategories();
-}
+async function addCategory(){notify('Only Clothes category is enabled right now.');}
+async function deleteCategory(){notify('Clothes category is locked.');}
 /* ORDER HELPERS */
 function statusPill(s){const v=String(s||'Pending'),cls=v.toLowerCase()==='delivered'?'green':v.toLowerCase()==='cancelled'?'red':v.toLowerCase()==='pending'?'orange':'';return `<span class="pill ${cls}">${esc(v)}</span>`;}
 function dateText(v){return v?new Date(v).toLocaleString('en-IN'):'—';}
@@ -412,10 +374,21 @@ async function updateSupportStatus(){
 }
 /* CUSTOMERS */
 async function loadCustomers(){
- const {data,error}=await db.from('profiles').select('id,name,email,role,created_at').order('created_at',{ascending:false});
- if(error){$('customersBody').innerHTML=`<tr><td colspan="4" class="empty">${esc(error.message)}</td></tr>`;return;}
+ const {data,error}=await db.from('profiles').select('id,name,email,role,approval_status,created_at').order('created_at',{ascending:false});
+ if(error){$('customersBody').innerHTML=`<tr><td colspan="6" class="empty">${esc(error.message)}</td></tr>`;return;}
  const rows=(data||[]).filter(p=>p.role!=='admin');
- $('customersBody').innerHTML=rows.length?rows.map(p=>`<tr><td>${esc(p.name||'—')}</td><td>${esc(p.email||'—')}</td><td>${esc(p.role||'customer')}</td><td>${dateText(p.created_at)}</td></tr>`).join(''):'<tr><td colspan="4" class="empty">No customers found</td></tr>';
+ $('customersBody').innerHTML=rows.length?rows.map(p=>`<tr><td>${esc(p.name||'—')}</td><td>${esc(p.email||'—')}</td><td>${esc(p.role||'customer')}</td><td>${esc(p.approval_status||'pending')}</td><td>${dateText(p.created_at)}</td><td>${p.approval_status==='approved'?'Approved':`<button onclick="reviewCustomerAccess('${p.id}','approved')">Approve</button> <button class="danger" onclick="reviewCustomerAccess('${p.id}','rejected')">Reject</button>`}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">No customers found</td></tr>';
+}
+async function reviewCustomerAccess(userId,status){
+ const {data:{user},error:userError}=await db.auth.getUser();
+ if(userError||!user){showLogin('Admin login required');return;}
+ const {data:profile,error}=await db.from('profiles').select('role').eq('id',user.id).maybeSingle();
+ if(error||profile?.role!=='admin'){showLogin('Admin access required');return;}
+ const {error:reviewError}=await db.rpc('admin_review_customer',{p_user_id:userId,p_status:status});
+ if(reviewError){notify('Approval update failed: '+reviewError.message);return;}
+ notify(status==='approved'?'Tester approved':'Tester rejected');
+ await loadCustomers();
+}
 }
 /* COUPONS */
 async function loadCoupons(){
