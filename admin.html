@@ -389,7 +389,6 @@ async function reviewCustomerAccess(userId,status){
  notify(status==='approved'?'Tester approved':'Tester rejected');
  await loadCustomers();
 }
-}
 /* COUPONS */
 async function loadCoupons(){
  const {data,error}=await db.from('coupons').select('*').order('created_at',{ascending:false});
