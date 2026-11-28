@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SUPER MART | Owner Control</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#232f3e;--orange:#ff9900;--bg:#f3f5f8;--line:#e5e7eb}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px Arial;color:#17202a}.top{background:var(--navy);color:white;padding:16px 20px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.brand{font-size:22px;font-weight:900}.brand span{color:var(--orange)}main{max-width:1100px;margin:auto;padding:18px}.card{background:white;border:1px solid var(--line);border-radius:12px;padding:18px;margin:0 0 15px}.login{max-width:420px;margin:8vh auto}.field{display:grid;gap:6px;margin:12px 0}.field input,.field textarea{padding:11px;border:1px solid #cbd2d9;border-radius:7px;width:100%}button{background:var(--orange);border:0;border-radius:7px;padding:11px 15px;font-weight:700;cursor:pointer}.secondary{background:#e8edf3}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.stat{font-size:27px;font-weight:800;margin-top:8px}.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.modes button{background:#e8edf3}.modes button.active{background:var(--orange)}.muted{color:#667085;font-size:13px}.error{color:#b42318;white-space:pre-wrap}@media(max-width:650px){.grid{grid-template-columns:1fr 1fr}.modes{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<header class="top"><div class="brand">SUPER <span>MART</span> · OWNER</div><div><a href="/admin.html" style="color:#fff;margin-right:12px">Admin Panel</a><button id="logoutBtn" class="secondary" hidden onclick="logout()">Logout</button></div></header>
+<main>
+<section id="loginCard" class="card login"><h2>Owner Login</h2><p class="muted">Only the verified store owner can access this control center.</p>
+<form id="loginForm"><div class="field"><label>Email</label><input id="email" type="email" required autocomplete="username"></div><div class="field"><label>Password</label><input id="password" type="password" required autocomplete="current-password"></div><button id="loginBtn">Login</button></form><div id="loginError" class="error"></div></section>
+<section id="ownerApp" hidden>
+<div class="card"><h2>Store Overview</h2><p class="muted">Live values read from your Supabase database.</p><div class="grid"><div><span class="muted">Total Orders</span><div class="stat" id="ordersCount">—</div></div><div><span class="muted">Active Clothes Products</span><div class="stat" id="productsCount">—</div></div><div><span class="muted">Low Stock (≤5)</span><div class="stat" id="lowStockCount">—</div></div></div><button class="secondary" style="margin-top:15px" onclick="refreshOwnerData()">Refresh</button></div>
+<div class="card"><h2>Website Mode</h2><p class="muted">Public lets customers shop. Private, Maintenance and Off hide the storefront. Maintenance message is shown to customers.</p><div class="modes"><button data-mode="public" onclick="chooseMode('public',this)">Public</button><button data-mode="private" onclick="chooseMode('private',this)">Private</button><button data-mode="maintenance" onclick="chooseMode('maintenance',this)">Maintenance</button><button data-mode="off" onclick="chooseMode('off',this)">Off</button></div><div class="field"><label>Customer-facing message</label><textarea id="modeMessage" rows="3" maxlength="500" placeholder="Store is temporarily unavailable. Please visit again soon."></textarea></div><button onclick="saveMode()">Save Website Mode</button><p id="modeStatus" class="muted"></p></div>
+<div class="card"><h3>Security note</h3><p class="muted">This page checks the database owner permission with is_store_owner(). It does not expose service-role credentials. Database backups, MFA enforcement, staff permissions and security alerts must be configured and tested separately.</p></div>
+</section>
+</main>
+<script>
+const SUPABASE_URL='https://kmyrqipubmwzvjokwmli.supabase.co';
+const SUPABASE_KEY='sb_publishable_K5g61U2Pr9iPyIxbcmyEvw_Dvysu-4O';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storageKey:'super-mart-admin-auth'}});
+let chosenMode='public';
+const $=id=>document.getElementById(id);
+function errText(e){return e?.message||String(e||'Unknown error');}
+async function verifyOwner(){
+ const {data:{user},error}=await db.auth.getUser();
+ if(error||!user){showLogin('Please sign in.');return false;}
+ const {data,error:ownerError}=await db.rpc('is_store_owner');
+ if(ownerError||data!==true){await db.auth.signOut();showLogin('Owner permission denied: '+errText(ownerError));return false;}
+ $('loginCard').hidden=true;$('ownerApp').hidden=false;$('logoutBtn').hidden=false;
+ await refreshOwnerData();return true;
+}
+function showLogin(msg=''){ $('loginCard').hidden=false;$('ownerApp').hidden=true;$('logoutBtn').hidden=true;$('loginError').textContent=msg; }
+$('loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();$('loginBtn').disabled=true;
+ const {error}=await db.auth.signInWithPassword({email:$('email').value.trim().toLowerCase(),password:$('password').value});
+ $('loginBtn').disabled=false;if(error){showLogin(errText(error));return;}await verifyOwner();
+});
+async function refreshOwnerData(){
+ const [o,p,s]=await Promise.all([
+  db.from('orders').select('id',{count:'exact',head:true}),
+  db.from('products').select('id,stock,active').eq('category','Clothes'),
+  db.from('store_settings').select('website_mode,maintenance_message').limit(1).maybeSingle()
+ ]);
+ if(o.error||p.error){$('modeStatus').textContent='Load failed: '+errText(o.error||p.error);return;}
+ $('ordersCount').textContent=o.count??'—';
+ $('productsCount').textContent=(p.data||[]).filter(x=>x.active!==false).length;
+ $('lowStockCount').textContent=(p.data||[]).filter(x=>x.active!==false&&Number(x.stock||0)<=5).length;
+ if(s.error){$('modeStatus').textContent='Store settings load failed: '+errText(s.error);return;}
+ chosenMode=s.data?.website_mode||'public';$('modeMessage').value=s.data?.maintenance_message||'';
+ document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===chosenMode));
+ $('modeStatus').textContent='Current mode: '+chosenMode;
+}
+function chooseMode(mode,button){chosenMode=mode;document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b===button));}
+async function saveMode(){
+ const message=$('modeMessage').value.trim();
+ const {data,error}=await db.rpc('set_store_mode',{p_mode:chosenMode,p_message:message});
+ if(error){$('modeStatus').textContent='Save failed: '+errText(error);return;}
+ $('modeStatus').textContent='Saved. Current mode: '+chosenMode;
+}
+async function logout(){await db.auth.signOut();showLogin('Signed out.');}
+(async()=>{const {data:{session}}=await db.auth.getSession();if(session)await verifyOwner();else showLogin();})();
+</script></body></html>

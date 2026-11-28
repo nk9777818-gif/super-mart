@@ -197,9 +197,14 @@ th{background:#f2f4f6}
 .cart-line .line-total{grid-column:1/-1;text-align:right}
 .admin-login-card{padding:22px}
 }
+
+.store-gate{display:none;min-height:70vh;place-items:center;padding:24px;background:#f3f6fa}
+.store-gate-card{width:min(560px,100%);background:#fff;border-radius:14px;padding:30px;text-align:center;box-shadow:0 8px 30px #00000012}
+.store-gate-card h1{color:#232f3e}.store-gate-card p{color:#667085;line-height:1.6}
 </style>
 </head>
 <body>
+<div id="storeModeGate" class="store-gate"><div class="store-gate-card"><div class="logo" style="color:#131921">SUPER <span>MART</span></div><h1 id="storeGateTitle">Store temporarily unavailable</h1><p id="storeGateMessage">Please visit again soon.</p></div></div>
 
 <div id="adminLoginPage">
 <div class="admin-login-card">
@@ -1094,13 +1099,29 @@ return `<div class="panel">
 <div style="margin-top:12px">${items.map(item=>`<div class="total-row"><span>${escapeHtml(item.product_name||item.name||'Product')} × ${Number(item.quantity||1)}</span><b>${money(item.price*Number(item.quantity||1))}</b></div>`).join('')}</div>
 <div class="total-row"><b>Total</b><b>${money(order.total_amount||order.total||0)}</b></div>
 ${order.tracking_note?`<p class="muted">Tracking update: ${escapeHtml(order.tracking_note)}</p>`:''}
-${['Pending','Processing'].includes(order.status)?`<button class="danger" onclick="cancelMyOrder(${Number(order.id)})">Cancel Order</button>`:''}
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="secondary" onclick="printCustomerInvoice(${Number(order.id)})">Print Invoice</button>${['Pending','Processing'].includes(order.status)?`<button class="danger" onclick="cancelMyOrder(${Number(order.id)})">Cancel Order</button>`:''}</div>
 </div>`;
 }).join('');
 }catch(error){
 $('ordersContent').innerHTML=`<div class="empty">Orders load nahi hue.<br>${escapeHtml(error.message||'Please try again.')}</div>`;
 }
 }
+
+function printDocument(title,body){
+ const w=window.open('','_blank','width=900,height=700');if(!w){notify('Please allow pop-ups to print the invoice');return;}
+ w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>body{font:14px Arial;padding:28px;color:#17202a}h1{color:#172536}.head{display:flex;justify-content:space-between;border-bottom:2px solid #ff9900;padding-bottom:14px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{text-align:left;padding:10px;border-bottom:1px solid #ddd}th{background:#f2f4f7}.total{text-align:right;font-size:18px;font-weight:bold;margin-top:18px}</style></head><body>${body}<script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
+async function printCustomerInvoice(orderId){
+ const user=await getFreshUser();if(!user){notify('Please login');return;}
+ const {data:order,error}=await db.from('orders').select('*').eq('id',orderId).eq('user_id',user.id).maybeSingle();
+ if(error||!order){notify('Invoice could not be loaded');return;}
+ const {data:items,error:itemError}=await db.from('order_items').select('*').eq('order_id',orderId);
+ if(itemError){notify('Invoice items could not be loaded');return;}
+ const a=order.address&&typeof order.address==='object'?order.address:{};
+ const rows=(items||[]).map(i=>`<tr><td>${escapeHtml(i.product_name||i.name||'Product')}</td><td>${Number(i.quantity||1)}</td><td>${money(i.price)}</td><td>${money(Number(i.price||0)*Number(i.quantity||1))}</td></tr>`).join('');
+ printDocument('SUPER MART Invoice',`<div class="head"><div><h1>SUPER MART</h1><small>Customer Invoice · Cash on Delivery</small></div><div><b>Invoice #${escapeHtml(order.id)}</b><br>${new Date(order.created_at).toLocaleString('en-IN')}</div></div><h3>Bill To</h3><p>${escapeHtml(order.customer_name||a.name||'Customer')}<br>${escapeHtml(order.phone||a.phone||'')}<br>${escapeHtml([a.address,a.city,a.state,a.pin||a.pincode].filter(Boolean).join(', '))}</p><table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table><div class="total">Total: ${money(order.total_amount||order.total||0)}</div><p>Thank you for shopping with SUPER MART.</p>`);
+}
+
 async function cancelMyOrder(orderId){
 try{
 const user=await getFreshUser();
@@ -1660,6 +1681,19 @@ catch(error){console.warn('Profile refresh:',error);}
 currentProfile=null;
 }
 });
+
+
+async function applyPublicStoreMode(){
+ const gate=$('storeModeGate');
+ const {data,error}=await db.from('store_settings').select('website_mode,maintenance_message').limit(1).maybeSingle();
+ if(error){console.warn('Store mode check failed:',error.message);return;}
+ const mode=String(data?.website_mode||'public').toLowerCase();
+ if(mode==='public'){gate.style.display='none';return;}
+ document.querySelectorAll('body > header, body > nav, body > section.hero, body > main, body > footer, #aiChatButton, #aiChatBox').forEach(el=>el.style.display='none');
+ $('storeGateTitle').textContent=mode==='maintenance'?'We are under maintenance':mode==='private'?'Store is private':'Store is currently offline';
+ $('storeGateMessage').textContent=data?.maintenance_message||'SUPER MART is temporarily unavailable. Please visit again soon.';
+ gate.style.display='grid';
+}
 
 /* INITIAL LOAD */
 async function init(){
